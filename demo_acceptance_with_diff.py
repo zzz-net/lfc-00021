@@ -73,13 +73,13 @@ def precheck_and_import(bid, filename, filepath, user, import_format="json"):
             data=data
         )
     if r.status_code != 200:
-        print(f"  ❌ 预检查失败: {r.status_code}")
+        print(f"  [FAIL] 预检查失败: {r.status_code}")
         print(f"     {r.json()}")
         sys.exit(1)
 
     body = r.json()
     if not body.get("can_import"):
-        print(f"  ❌ 无法导入: {body.get('message')}")
+        print(f"  [FAIL] 无法导入: {body.get('message')}")
         sys.exit(1)
 
     token = body.get("precheck_token")
@@ -95,7 +95,7 @@ def precheck_and_import(bid, filename, filepath, user, import_format="json"):
         )
 
     if r.status_code != 200 or not r.json().get("success"):
-        print(f"  ❌ 导入失败: {r.status_code}")
+        print(f"  [FAIL] 导入失败: {r.status_code}")
         print(f"     {r.json()}")
         sys.exit(1)
 
@@ -112,10 +112,10 @@ def main():
     try:
         r = requests.get(f"{API}/health")
         if r.status_code != 200:
-            print("❌ 服务未正常运行")
+            print("[FAIL] 服务未正常运行")
             sys.exit(1)
     except requests.ConnectionError:
-        print("❌ 无法连接到服务，请先启动服务")
+        print("[FAIL] 无法连接到服务，请先启动服务")
         sys.exit(1)
     print_success("服务运行正常")
 
@@ -220,7 +220,7 @@ def main():
         headers=H_LEAD
     )
     if r.status_code != 200:
-        print(f"  ❌ 版本差异查询失败: {r.status_code}")
+        print(f"  [FAIL] 版本差异查询失败: {r.status_code}")
         print(f"     {r.json()}")
         sys.exit(1)
 
@@ -283,7 +283,7 @@ def main():
         headers=H_LEAD
     )
     if r.status_code != 200:
-        print(f"  ❌ 导出失败: {r.status_code}")
+        print(f"  [FAIL] 导出失败: {r.status_code}")
         print(f"     {r.json()}")
         sys.exit(1)
 
@@ -304,7 +304,7 @@ def main():
     if export_data["export_id"] == export_data2["export_id"]:
         print_success(f"幂等性验证通过！两次导出 ID 相同: {export_data['export_id']}")
     else:
-        print(f"  ❌ 幂等性验证失败: {export_data['export_id']} != {export_data2['export_id']}")
+        print(f"  [FAIL] 幂等性验证失败: {export_data['export_id']} != {export_data2['export_id']}")
 
     # ==============================================
     # 阶段 7: 权限验证
@@ -320,7 +320,7 @@ def main():
         print_success(f"权限控制生效！reviewer 被正确拒绝 (403 Forbidden)")
         print_info(f"错误信息: {r.json()['error']['message'][:80]}...")
     else:
-        print(f"  ❌ 权限控制失效: 期望 403，实际 {r.status_code}")
+        print(f"  [FAIL] 权限控制失效: 期望 403，实际 {r.status_code}")
 
     print_step(13, "验证其他 submitter 无权查看")
     r = requests.get(
@@ -330,7 +330,7 @@ def main():
     if r.status_code == 403:
         print_success(f"权限控制生效！其他 submitter 被正确拒绝 (403 Forbidden)")
     else:
-        print(f"  ❌ 权限控制失效: 期望 403，实际 {r.status_code}")
+        print(f"  [FAIL] 权限控制失效: 期望 403，实际 {r.status_code}")
 
     # ==============================================
     # 阶段 8: 审批日志验证
@@ -419,4 +419,13 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"\n[ERROR] 验收链路执行异常: {e}")
+        import traceback
+        traceback.print_exc()
+        import sys
+        sys.exit(1)

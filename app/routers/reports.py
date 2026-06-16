@@ -465,40 +465,72 @@ def _collect_validation_changes(
         new_r = new_map.get(k)
 
         if old_r is None:
-            changes.append(ValidationChange(
-                item_key=new_r.item_key,
-                field_name=new_r.field_name,
-                rule_code=new_r.rule_code,
-                new_severity=new_r.severity,
-                new_passed=new_r.passed,
-                new_message=new_r.message,
-                change_type="new_violation"
-            ))
+            if not new_r.passed:
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    new_severity=new_r.severity,
+                    new_passed=new_r.passed,
+                    new_message=new_r.message,
+                    change_type="new_violation"
+                ))
         elif new_r is None:
-            changes.append(ValidationChange(
-                item_key=old_r.item_key,
-                field_name=old_r.field_name,
-                rule_code=old_r.rule_code,
-                old_severity=old_r.severity,
-                old_passed=old_r.passed,
-                old_message=old_r.message,
-                change_type="resolved"
-            ))
-        elif (old_r.passed != new_r.passed or
-              old_r.severity != new_r.severity or
-              old_r.message != new_r.message):
-            changes.append(ValidationChange(
-                item_key=new_r.item_key,
-                field_name=new_r.field_name,
-                rule_code=new_r.rule_code,
-                old_severity=old_r.severity,
-                new_severity=new_r.severity,
-                old_passed=old_r.passed,
-                new_passed=new_r.passed,
-                old_message=old_r.message,
-                new_message=new_r.message,
-                change_type="modified"
-            ))
+            if not old_r.passed:
+                changes.append(ValidationChange(
+                    item_key=old_r.item_key,
+                    field_name=old_r.field_name,
+                    rule_code=old_r.rule_code,
+                    old_severity=old_r.severity,
+                    old_passed=old_r.passed,
+                    old_message=old_r.message,
+                    change_type="resolved"
+                ))
+        else:
+            old_failed = not old_r.passed
+            new_failed = not new_r.passed
+            if old_failed and not new_failed:
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    old_severity=old_r.severity,
+                    new_severity=new_r.severity,
+                    old_passed=old_r.passed,
+                    new_passed=new_r.passed,
+                    old_message=old_r.message,
+                    new_message=new_r.message,
+                    change_type="resolved"
+                ))
+            elif not old_failed and new_failed:
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    old_severity=old_r.severity,
+                    new_severity=new_r.severity,
+                    old_passed=old_r.passed,
+                    new_passed=new_r.passed,
+                    old_message=old_r.message,
+                    new_message=new_r.message,
+                    change_type="new_violation"
+                ))
+            elif old_failed and new_failed and (
+                old_r.severity != new_r.severity or
+                old_r.message != new_r.message
+            ):
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    old_severity=old_r.severity,
+                    new_severity=new_r.severity,
+                    old_passed=old_r.passed,
+                    new_passed=new_r.passed,
+                    old_message=old_r.message,
+                    new_message=new_r.message,
+                    change_type="modified"
+                ))
 
     return changes
 

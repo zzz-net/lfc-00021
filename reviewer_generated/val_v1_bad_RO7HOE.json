@@ -1,0 +1,14 @@
+[
+  {
+    "item_id": "ITEM-R1",
+    "item_name": "Router Board",
+    "quantity": -1,
+    "unit_price": 1200
+  },
+  {
+    "item_id": "ITEM-R2",
+    "item_name": "Power Module",
+    "quantity": 4,
+    "unit_price": 300
+  }
+]

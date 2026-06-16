@@ -488,6 +488,230 @@ def test_version_diff_rejection_data(batch_id):
                   f"(by {rej.get('rejector_username')})")
 
 
+def test_validation_state_transitions():
+    global passed, failed
+    print("\n" + "=" * 70)
+    print("测试 13: 通过/违规切换边界（修复校验误报）")
+    print("=" * 70)
+
+    tmp_dir = "reviewer_generated"
+    os.makedirs(tmp_dir, exist_ok=True)
+
+    v1_bad = [
+        {"item_id": "ITEM-R1", "item_name": "Router Board", "quantity": -1, "unit_price": 1200},
+        {"item_id": "ITEM-R2", "item_name": "Power Module", "quantity": 4, "unit_price": 300}
+    ]
+    v2_fixed = [
+        {"item_id": "ITEM-R1", "item_name": "Router Board", "quantity": 2, "unit_price": 1200},
+        {"item_id": "ITEM-R2", "item_name": "Power Module", "quantity": 4, "unit_price": 300},
+        {"item_id": "ITEM-R3", "item_name": "Fan Tray", "quantity": 8, "unit_price": 150}
+    ]
+    v2_bad = [
+        {"item_id": "ITEM-R1", "item_name": "Router Board", "quantity": -1, "unit_price": 1200},
+        {"item_id": "ITEM-R2", "item_name": "Power Module", "quantity": -3, "unit_price": 300}
+    ]
+
+    v1_bad_path = os.path.join(tmp_dir, f"val_v1_bad_{SUFFIX}.json")
+    v2_fixed_path = os.path.join(tmp_dir, f"val_v2_fixed_{SUFFIX}.json")
+    v2_bad_path = os.path.join(tmp_dir, f"val_v2_bad_{SUFFIX}.json")
+
+    with open(v1_bad_path, "w", encoding="utf-8") as f:
+        json.dump(v1_bad, f, ensure_ascii=False, indent=2)
+    with open(v2_fixed_path, "w", encoding="utf-8") as f:
+        json.dump(v2_fixed, f, ensure_ascii=False, indent=2)
+    with open(v2_bad_path, "w", encoding="utf-8") as f:
+        json.dump(v2_bad, f, ensure_ascii=False, indent=2)
+
+    def _create_and_import(batch_name, paths):
+        code = f"{BATCH_CODE}-{batch_name.replace(' ', '')[-8:]}"
+        r = requests.post(
+            f"{API}/api/batches",
+            headers=H_SUBMITTER_1,
+            json={"batch_code": code, "name": batch_name, "description": batch_name, "submitter_id": 5}
+        )
+        if r.status_code != 201:
+            return None
+        bid = r.json()["id"]
+        for p in paths:
+            rr, _ = precheck_and_import(bid, os.path.basename(p), p, H_SUBMITTER_1)
+            if rr.status_code != 200:
+                return None
+            requests.post(f"{API}/api/batches/{bid}/validate", headers=H_SUBMITTER_1)
+        return bid
+
+    bid_resolve = _create_and_import(
+        "val-resolve-test", [v1_bad_path, v2_fixed_path]
+    )
+    if bid_resolve is None:
+        failed += 1
+        print("  [FAIL] 场景A: 创建 resolve 批次(违规→修复+新增)")
+    else:
+        passed += 1
+        print("  [PASS] 场景A: 创建 resolve 批次(违规→修复+新增)")
+
+    if bid_resolve:
+        r = requests.get(
+            f"{API}/api/batches/{bid_resolve}/version-diff?old_version=1&new_version=2",
+            headers=H_LEAD
+        )
+        data = test("场景A: 获取版本差异", r, 200)
+        if data:
+            changes = data.get("validation_changes", [])
+            print(f"  [INFO] validation_changes 共 {len(changes)} 条")
+            for c in changes:
+                print(f"    - {c['item_key']}/{c.get('field_name', '')}/{c.get('rule_code', '')}: {c['change_type']}")
+
+            resolved_changes = [c for c in changes if c["change_type"] == "resolved"]
+            new_violations = [c for c in changes if c["change_type"] == "new_violation"]
+            modified_changes = [c for c in changes if c["change_type"] == "modified"]
+
+            test("场景A: ITEM-R1 违规修复 change_type=resolved", r, check_fn=lambda d:
+                 any(c["item_key"] == "ITEM-R1" and c["change_type"] == "resolved"
+                     for c in d["validation_changes"]))
+
+            test("场景A: ITEM-R3(新增且校验通过) 不应出现在 new_violation", r, check_fn=lambda d:
+                 not any(c["item_key"] == "ITEM-R3" and c["change_type"] == "new_violation"
+                         for c in d["validation_changes"]))
+
+            test("场景A: ITEM-R3(新增且校验通过) 不应出现在 validation_changes", r, check_fn=lambda d:
+                 not any(c["item_key"] == "ITEM-R3" for c in d["validation_changes"]))
+
+            test("场景A: 不应有误报的 new_violation", r, check_fn=lambda d:
+                 len([c for c in d["validation_changes"]
+                      if c["change_type"] == "new_violation" and c.get("new_passed")]) == 0)
+
+    bid_new_vio = _create_and_import(
+        "val-newviolation-test", [v1_bad_path, v2_bad_path]
+    )
+    if bid_new_vio is None:
+        failed += 1
+        print("  [FAIL] 场景B: 创建 new_violation 批次(违规→新增违规)")
+    else:
+        passed += 1
+        print("  [PASS] 场景B: 创建 new_violation 批次(违规→新增违规)")
+
+    if bid_new_vio:
+        r = requests.get(
+            f"{API}/api/batches/{bid_new_vio}/version-diff?old_version=1&new_version=2",
+            headers=H_LEAD
+        )
+        data = test("场景B: 获取版本差异", r, 200)
+        if data:
+            changes = data.get("validation_changes", [])
+            print(f"  [INFO] validation_changes 共 {len(changes)} 条")
+            for c in changes:
+                print(f"    - {c['item_key']}/{c.get('field_name', '')}/{c.get('rule_code', '')}: {c['change_type']}")
+
+            test("场景B: ITEM-R2 新增违规 change_type=new_violation", r, check_fn=lambda d:
+                 any(c["item_key"] == "ITEM-R2" and c["change_type"] == "new_violation"
+                     for c in d["validation_changes"]))
+
+            test("场景B: ITEM-R1 仍违规且字段相同不应计入", r, check_fn=lambda d:
+                 not any(c["item_key"] == "ITEM-R1" and c["change_type"] == "modified"
+                         for c in d["validation_changes"]))
+
+    os.remove(v1_bad_path)
+    os.remove(v2_fixed_path)
+    os.remove(v2_bad_path)
+
+
+def test_export_api_consistency():
+    global passed, failed
+    print("\n" + "=" * 70)
+    print("测试 14: 接口与导出 JSON 一致性")
+    print("=" * 70)
+
+    r = requests.post(
+        f"{API}/api/batches",
+        headers=H_SUBMITTER_1,
+        json={"batch_code": f"{BATCH_CODE}-CONSIST", "name": f"一致性测试批次-{SUFFIX}", "description": "接口 vs 导出一致性", "submitter_id": 5}
+    )
+    data = test("创建一致性测试批次", r, 201)
+    if not data:
+        return
+    bid = data["id"]
+
+    rr, _ = precheck_and_import(bid, os.path.basename(V1_FILE), V1_FILE, H_SUBMITTER_1)
+    test("一致性测试导入 v1", rr, 200, expect_success=True)
+    requests.post(f"{API}/api/batches/{bid}/validate", headers=H_SUBMITTER_1)
+
+    rr, _ = precheck_and_import(bid, os.path.basename(V2_FILE), V2_FILE, H_SUBMITTER_1)
+    test("一致性测试导入 v2", rr, 200, expect_success=True)
+    requests.post(f"{API}/api/batches/{bid}/validate", headers=H_SUBMITTER_1)
+
+    r_api = requests.get(
+        f"{API}/api/batches/{bid}/version-diff?old_version=1&new_version=2",
+        headers=H_LEAD
+    )
+    api_data = test("调用接口 version-diff", r_api, 200)
+
+    r_export = requests.get(
+        f"{API}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2",
+        headers=H_LEAD
+    )
+    export_data = test("调用 export 接口", r_export, 200)
+
+    if api_data and export_data:
+        diff_from_api = api_data
+        diff_from_export = export_data.get("diff_data")
+
+        def _check(name, cond, detail=""):
+            global passed, failed
+            if cond:
+                passed += 1
+                print(f"  [PASS] {name}")
+            else:
+                failed += 1
+                print(f"  [FAIL] {name}  --  {detail}")
+
+        test("导出结果包含 export_id", r_export, check_fn=lambda d:
+             len(d.get("export_id", "")) == 16)
+
+        _check("接口与导出: summary.added_count 一致",
+               diff_from_api["summary"]["added_count"] == diff_from_export["summary"]["added_count"],
+               f"{diff_from_api['summary']['added_count']} vs {diff_from_export['summary']['added_count']}")
+
+        _check("接口与导出: summary.removed_count 一致",
+               diff_from_api["summary"]["removed_count"] == diff_from_export["summary"]["removed_count"],
+               f"{diff_from_api['summary']['removed_count']} vs {diff_from_export['summary']['removed_count']}")
+
+        _check("接口与导出: summary.modified_count 一致",
+               diff_from_api["summary"]["modified_count"] == diff_from_export["summary"]["modified_count"],
+               f"{diff_from_api['summary']['modified_count']} vs {diff_from_export['summary']['modified_count']}")
+
+        _check("接口与导出: summary.validation_errors_new 一致",
+               diff_from_api["summary"].get("validation_errors_new") == diff_from_export["summary"].get("validation_errors_new"),
+               f"{diff_from_api['summary'].get('validation_errors_new')} vs {diff_from_export['summary'].get('validation_errors_new')}")
+
+        api_vc = diff_from_api.get("validation_changes", [])
+        export_vc = diff_from_export.get("validation_changes", [])
+        _check(f"接口与导出: validation_changes 数量一致 ({len(api_vc)} vs {len(export_vc)})",
+               len(api_vc) == len(export_vc))
+
+        api_rej = diff_from_api.get("unresolved_rejections", [])
+        export_rej = diff_from_export.get("unresolved_rejections", [])
+        _check(f"接口与导出: unresolved_rejections 数量一致 ({len(api_rej)} vs {len(export_rej)})",
+               len(api_rej) == len(export_rej))
+
+        api_item_keys_added = sorted([i["item_key"] for i in diff_from_api.get("added_items", [])])
+        exp_item_keys_added = sorted([i["item_key"] for i in diff_from_export.get("added_items", [])])
+        _check("接口与导出: added_items item_key 一致",
+               api_item_keys_added == exp_item_keys_added,
+               f"{api_item_keys_added} vs {exp_item_keys_added}")
+
+        r2 = requests.get(
+            f"{API}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2",
+            headers=H_LEAD
+        )
+        export2 = test("再次调用 export", r2, 200)
+        if export2:
+            _check("同批次同版本对比: export_id 幂等一致",
+                   export_data.get("export_id") == export2.get("export_id"),
+                   f"{export_data.get('export_id')} vs {export2.get('export_id')}")
+
+        print(f"  [INFO] export_id = {export_data.get('export_id')}")
+
+
 def main():
     print("\n" + "=" * 70)
     print("版本差异对比功能回归测试套件")
@@ -518,6 +742,8 @@ def main():
     test_version_diff_audit_logs(batch_id)
     test_version_diff_with_validation(batch_id)
     test_version_diff_rejection_data(batch_id)
+    test_validation_state_transitions()
+    test_export_api_consistency()
 
     print("\n" + "=" * 70)
     print("测试总结")
@@ -528,10 +754,10 @@ def main():
     print(f"成功率: {(passed / (passed + failed) * 100):.1f}%" if (passed + failed) > 0 else "无测试")
 
     if failed > 0:
-        print("\n❌ 存在测试失败!")
+        print("\n[FAIL] 存在测试失败!")
         sys.exit(1)
     else:
-        print("\n✅ 所有测试通过!")
+        print("\n[PASS] 所有测试通过!")
         print(f"\n测试批次 ID: {batch_id}")
         print(f"导出示例 export_id: {export_id}")
         print("\n你可以通过以下命令手动验证:")
@@ -541,4 +767,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception as e:
+        print(f"\n[ERROR] 测试执行异常: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
