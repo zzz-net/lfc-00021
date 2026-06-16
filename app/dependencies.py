@@ -86,3 +86,23 @@ def get_batch_or_404(db: Session, batch_id: int) -> DeliveryBatch:
             detail=f"Delivery batch with id {batch_id} not found"
         )
     return batch
+
+
+def require_version_diff_access(
+    batch_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+) -> User:
+    batch = get_batch_or_404(db, batch_id)
+    if current_user.role in [ROLE_LEAD, ROLE_ADMIN]:
+        return current_user
+    if current_user.role == ROLE_SUBMITTER and batch.submitter_id == current_user.id:
+        return current_user
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail=(
+            f"Permission denied. Only lead, admin, or the batch submitter can view version differences. "
+            f"Your role: {current_user.role}, your user id: {current_user.id}, "
+            f"batch submitter id: {batch.submitter_id}"
+        )
+    )

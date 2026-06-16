@@ -329,3 +329,119 @@ class ImportPrecheckQueryResponse(BaseModel):
 
 class ConfirmImportRequest(BaseModel):
     precheck_token: str = Field(..., max_length=64)
+
+
+DIFF_ACTION_ADDED = "added"
+DIFF_ACTION_REMOVED = "removed"
+DIFF_ACTION_MODIFIED = "modified"
+DIFF_ACTION_UNCHANGED = "unchanged"
+
+VALID_DIFF_ACTIONS = [DIFF_ACTION_ADDED, DIFF_ACTION_REMOVED, DIFF_ACTION_MODIFIED, DIFF_ACTION_UNCHANGED]
+
+APPROVAL_LOG_ACTION_VIEW_DIFF = "VIEW_VERSION_DIFF"
+APPROVAL_LOG_ACTION_EXPORT_DIFF = "EXPORT_VERSION_DIFF"
+
+
+class FieldChange(BaseModel):
+    field_name: str
+    old_value: Optional[Any] = None
+    new_value: Optional[Any] = None
+    change_type: str
+
+
+class ItemDiff(BaseModel):
+    item_key: str
+    action: str
+    line_number_old: Optional[int] = None
+    line_number_new: Optional[int] = None
+    old_data: Optional[Dict[str, Any]] = None
+    new_data: Optional[Dict[str, Any]] = None
+    field_changes: List[FieldChange] = []
+
+
+class ItemDiffSummary(BaseModel):
+    item_key: str
+    action: str
+    change_summary: str
+    changed_fields: List[str] = []
+
+
+class RejectionInfo(BaseModel):
+    id: int
+    item_key: Optional[str] = None
+    line_number: Optional[int] = None
+    rejection_reason: str
+    rejector_username: str
+    rejector_display_name: Optional[str] = None
+    created_at: datetime
+    resolved: bool
+    resolved_at: Optional[datetime] = None
+
+
+class ValidationChange(BaseModel):
+    item_key: Optional[str] = None
+    field_name: Optional[str] = None
+    rule_code: str
+    old_severity: Optional[str] = None
+    new_severity: Optional[str] = None
+    old_passed: Optional[bool] = None
+    new_passed: Optional[bool] = None
+    old_message: Optional[str] = None
+    new_message: Optional[str] = None
+    change_type: str
+
+
+class ImportInfo(BaseModel):
+    version_number: int
+    imported_by_username: str
+    imported_by_display_name: Optional[str] = None
+    imported_at: datetime
+    item_count: int
+    import_format: str
+
+
+class VersionDiffMetadata(BaseModel):
+    batch_id: int
+    batch_code: str
+    batch_name: str
+    old_version: int
+    new_version: int
+    old_import: ImportInfo
+    new_import: ImportInfo
+    generated_at: datetime
+    generated_by_username: str
+    generated_by_display_name: Optional[str] = None
+
+
+class VersionDiffSummary(BaseModel):
+    total_items_old: int
+    total_items_new: int
+    added_count: int
+    removed_count: int
+    modified_count: int
+    unchanged_count: int
+    field_change_count: int
+    unresolved_rejections_old: int
+    unresolved_rejections_new: int
+    validation_errors_old: int
+    validation_errors_new: int
+    validation_warnings_old: int
+    validation_warnings_new: int
+
+
+class VersionDiffResponse(BaseModel):
+    metadata: VersionDiffMetadata
+    summary: VersionDiffSummary
+    added_items: List[ItemDiff] = []
+    removed_items: List[ItemDiff] = []
+    modified_items: List[ItemDiff] = []
+    unchanged_items: List[ItemDiffSummary] = []
+    unresolved_rejections: List[RejectionInfo] = []
+    validation_changes: List[ValidationChange] = []
+
+
+class VersionDiffExportResponse(BaseModel):
+    export_id: str
+    export_timestamp: datetime
+    exported_by: str
+    diff_data: VersionDiffResponse
