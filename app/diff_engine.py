@@ -372,10 +372,11 @@ def save_diff_snapshot(
     if existing:
         if existing.content_hash == content_hash and existing.status == SNAPSHOT_VALID:
             return existing
-        existing.status = SNAPSHOT_SUPERSEDED
-        existing.invalidated_at = datetime.now()
-        existing.invalidated_by = creator.id
-        db.flush()
+        if existing.status == SNAPSHOT_VALID:
+            existing.status = SNAPSHOT_SUPERSEDED
+            existing.invalidated_at = datetime.now()
+            existing.invalidated_by = creator.id
+            db.flush()
 
     snapshot = VersionDiffSnapshot(
         batch_id=batch.id,
@@ -399,6 +400,24 @@ def save_diff_snapshot(
     db.add(snapshot)
     db.flush()
     return snapshot
+
+
+def get_or_compute_diff(
+    db: Session,
+    batch: DeliveryBatch,
+    old_version: ManifestVersion,
+    new_version: ManifestVersion,
+    current_user: User
+) -> tuple:
+    snapshot = get_snapshot_by_versions(
+        db, batch.id, old_version.version_number, new_version.version_number
+    )
+    if snapshot:
+        if _is_snapshot_stale(db, snapshot):
+            snapshot = refresh_snapshot(db, snapshot, current_user)
+        return snapshot_to_diff_response(snapshot), True, snapshot
+    diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
+    return diff, False, None
 
 
 def get_snapshot_by_versions(
@@ -446,6 +465,93 @@ def list_snapshots(
         VersionDiffSnapshot.created_at.desc()
     ).offset(offset).limit(limit).all()
     return snapshots, total
+
+
+def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
+    new_ver = db.query(ManifestVersion).filter(
+        ManifestVersion.id == snapshot.new_version_id
+    ).first()
+    old_ver = db.query(ManifestVersion).filter(
+        ManifestVersion.id == snapshot.old_version_id
+    ).first()
+
+    new_validated = new_ver and new_ver.validation_status != "pending"
+    old_validated = old_ver and old_ver.validation_status != "pending"
+
+    snap_new_warnings = snapshot.summary_json.get("validation_warnings_new", 0)
+    snap_old_warnings = snapshot.summary_json.get("validation_warnings_old", 0)
+    snap_new_errors = snapshot.summary_json.get("validation_errors_new", 0)
+    snap_old_errors = snapshot.summary_json.get("validation_errors_old", 0)
+
+    if new_validated:
+        actual_new_errors, actual_new_warnings = _count_validation_issues(db, new_ver.id)
+        if actual_new_errors != snap_new_errors or actual_new_warnings != snap_new_warnings:
+            return True
+
+    if old_validated:
+        actual_old_errors, actual_old_warnings = _count_validation_issues(db, old_ver.id)
+        if actual_old_errors != snap_old_errors or actual_old_warnings != snap_old_warnings:
+            return True
+
+    actual_unresolved = db.query(RejectionRecord).filter(
+        RejectionRecord.batch_id == snapshot.batch_id,
+        RejectionRecord.resolved == False
+    ).count()
+    snap_unresolved = snapshot.summary_json.get("unresolved_rejections_new", 0)
+    if actual_unresolved != snap_unresolved:
+        return True
+
+    return False
+
+
+def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: User) -> VersionDiffSnapshot:
+    batch = db.query(DeliveryBatch).filter(DeliveryBatch.id == snapshot.batch_id).first()
+    old_version = db.query(ManifestVersion).filter(
+        ManifestVersion.id == snapshot.old_version_id
+    ).first()
+    new_version = db.query(ManifestVersion).filter(
+        ManifestVersion.id == snapshot.new_version_id
+    ).first()
+    if not batch or not old_version or not new_version:
+        return snapshot
+
+    diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
+
+    original_generated_at = snapshot.metadata_json.get("generated_at")
+    if original_generated_at:
+        diff.metadata.generated_at = original_generated_at
+
+    new_hash = _compute_content_hash(diff)
+
+    if snapshot.content_hash == new_hash:
+        return snapshot
+
+    snapshot.content_hash = new_hash
+    snapshot.metadata_json = diff.metadata.model_dump(mode='json')
+    snapshot.summary_json = diff.summary.model_dump(mode='json')
+    snapshot.added_items_json = [item.model_dump(mode='json') for item in diff.added_items]
+    snapshot.removed_items_json = [item.model_dump(mode='json') for item in diff.removed_items]
+    snapshot.modified_items_json = [item.model_dump(mode='json') for item in diff.modified_items]
+    snapshot.unchanged_items_json = [item.model_dump(mode='json') for item in diff.unchanged_items]
+    snapshot.unresolved_rejections_json = [r.model_dump(mode='json') for r in diff.unresolved_rejections]
+    snapshot.validation_changes_json = [c.model_dump(mode='json') for c in diff.validation_changes]
+    db.flush()
+    return snapshot
+
+
+def refresh_snapshots_for_batch(db: Session, batch_id: int, current_user: User) -> int:
+    snapshots = db.query(VersionDiffSnapshot).filter(
+        VersionDiffSnapshot.batch_id == batch_id,
+        VersionDiffSnapshot.status == SNAPSHOT_VALID
+    ).all()
+    refreshed = 0
+    for snap in snapshots:
+        if _is_snapshot_stale(db, snap):
+            refresh_snapshot(db, snap, current_user)
+            refreshed += 1
+    if refreshed:
+        db.commit()
+    return refreshed
 
 
 def snapshot_to_diff_response(snapshot: VersionDiffSnapshot) -> VersionDiffResponse:

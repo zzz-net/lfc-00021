@@ -134,6 +134,9 @@ def reject_batch(
     db.commit()
     db.refresh(batch)
 
+    from app.diff_engine import refresh_snapshots_for_batch
+    refresh_snapshots_for_batch(db, batch_id, current_user)
+
     return {
         "success": True,
         "batch_id": batch.id,

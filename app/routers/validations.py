@@ -105,6 +105,9 @@ def run_validation(
             detail=str(e)
         )
 
+    from app.diff_engine import refresh_snapshots_for_batch
+    refreshed = refresh_snapshots_for_batch(db, batch_id, current_user)
+
     summary = result["summary"]
     result_models = result["results"]
 

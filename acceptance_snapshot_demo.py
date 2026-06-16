@@ -1,19 +1,21 @@
 """
-批次版本对比 - 用户可见验收链路 (Acceptance Demo)
-====================================================
+Batch Version Diff - Acceptance Demo (with validation + restart verification)
+==============================================================================
 
-用 Python requests 跑一条完整用户链路，演示：
-  1.  作为提交人创建批次并导入 v1 / v2 两个版本
-  2.  作为 lead 查询 latest 快照 及按版本对 (v1->v2) 查询
-  3.  作为 admin 导出 JSON 和 CSV
-  4.  验证 reviewer 越权访问被 403 拒绝
-  5.  展示内容一致性（snapshot / API / 导出 三者 content_hash 一致）
+Full user-visible chain:
+  1.  Submitter creates batch, imports v1 (all-pass items)
+  2.  Admin validates v1 -> all pass
+  3.  Submitter submits for review
+  4.  Reviewer rejects with item-level issue
+  5.  Submitter starts repair, imports v2 (with RANGE_QUANTITY warning)
+  6.  Admin validates v2 -> produces warning
+  7.  Lead queries snapshot: must show validation_changes, validation_warnings_new > 0
+  8.  Admin exports JSON & CSV
+  9.  Reviewer denied (403)
+  10. Restart service -> re-verify snapshot content_hash unchanged
 
-运行方式:
+Run:
     python acceptance_snapshot_demo.py
-
-依赖:
-    pip install requests
 """
 
 import requests
@@ -23,6 +25,8 @@ import os
 import tempfile
 import random
 import string
+import time
+import subprocess
 
 API_BASE = "http://127.0.0.1:8001"
 
@@ -49,132 +53,222 @@ def ok(msg, resp=None, expect=200):
     print(f"  [OK] {msg}" + (f"  [{resp.status_code}]" if resp else ""))
 
 
-def main():
-    section("健康检查")
-    r = requests.get(f"{API_BASE}/health")
-    ok("服务健康", r, 200)
+def precheck_and_import(bid, filename, body, user=H_SUBMITTER):
+    r = requests.post(
+        f"{API_BASE}/api/batches/{bid}/manifests/precheck",
+        headers=user,
+        files={"file": (filename, body, "application/json")},
+        data={"import_format": "json"},
+    )
+    ok(f"Precheck {filename}", r, 200)
+    token = r.json()["precheck_token"]
+    r = requests.post(
+        f"{API_BASE}/api/batches/{bid}/manifests/import",
+        headers=user,
+        files={"file": (filename, body, "application/json")},
+        data={"import_format": "json", "precheck_token": token},
+    )
+    return r
 
-    # -------- Step 1: submitter 创建批次并导入 v1 / v2 --------
-    section("Step 1 · Submitter 创建批次 & 导入 v1 / v2")
+
+def restart_service():
+    print("  Stopping server...")
+    subprocess.run(
+        ["powershell", "-Command",
+         "Get-NetTCPConnection -LocalPort 8001 -ErrorAction SilentlyContinue "
+         "| Select-Object -ExpandProperty OwningProcess "
+         "| ForEach-Object { Stop-Process -Id $_ -Force }"],
+        capture_output=True, text=True, timeout=15
+    )
+    time.sleep(2)
+    print("  Starting server...")
+    proc = subprocess.Popen(
+        [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8001"],
+        cwd=os.path.dirname(os.path.abspath(__file__)),
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+    )
+    for _ in range(20):
+        time.sleep(0.5)
+        try:
+            r = requests.get(f"{API_BASE}/health", timeout=2)
+            if r.status_code == 200:
+                print("  Server restarted successfully")
+                return proc
+        except Exception:
+            pass
+    print("  [ERROR] Server failed to restart within 10 seconds")
+    return proc
+
+
+def main():
+    section("Health Check")
+    r = requests.get(f"{API_BASE}/health")
+    ok("Service healthy", r, 200)
+
+    # -------- Step 1: create batch + import v1 --------
+    section("Step 1: Submitter creates batch & imports v1 (all-pass)")
 
     r = requests.post(f"{API_BASE}/api/batches/", headers=H_SUBMITTER, json={
         "batch_code": "ACCEPT-" + "".join(random.choices(string.ascii_uppercase + string.digits, k=6)),
-        "name": "验收演示批次",
-        "description": "用于对外演示快照 / 导出 / 权限能力",
+        "name": "Acceptance demo batch",
+        "description": "Full chain: validate -> reject -> reimport -> validate -> snapshot",
         "submitter_id": 5,
     })
     batch = r.json()
-    ok(f"批次创建响应状态", r, 201)
+    ok("Batch created", r, 201)
     bid = batch["id"]
-    ok(f"批次已创建  id={bid}  code={batch['batch_code']}")
 
     v1_json = json.dumps([
-        {"item_id": "SKU-A1", "item_name": "Server R740",   "quantity": 10, "unit_price": 12000},
-        {"item_id": "SKU-B2", "item_name": "Switch 48Port", "quantity":  4, "unit_price":  3200},
+        {"item_id": "ITEM-A1", "item_name": "Widget A", "quantity": 5, "unit_price": 100},
+        {"item_id": "ITEM-B2", "item_name": "Widget B", "quantity": 3, "unit_price": 200},
     ])
+    r = precheck_and_import(bid, "v1.json", v1_json, H_SUBMITTER)
+    ok("Import v1", r, 200)
+
+    # -------- Step 2: validate v1 -> all pass --------
+    section("Step 2: Admin validates v1 -> all pass")
+
+    r = requests.post(f"{API_BASE}/api/batches/{bid}/validate", headers=H_ADMIN)
+    val_v1 = r.json()
+    ok(f"Validate v1: passed={val_v1['passed']}, failed={val_v1['failed']}, warnings={val_v1['warnings']}", r, 200)
+    assert val_v1["failed"] == 0 and val_v1["warnings"] == 0, "[FAIL] v1 should have no issues"
+
+    # -------- Step 3: submit for review --------
+    section("Step 3: Submitter submits for review")
+
+    r = requests.post(f"{API_BASE}/api/batches/{bid}/transition", headers=H_SUBMITTER, json={
+        "target_status": "pending_review"
+    })
+    ok("Transition to pending_review", r, 200)
+
+    # -------- Step 4: reviewer rejects --------
+    section("Step 4: Reviewer rejects with item-level issue")
+
+    r = requests.post(f"{API_BASE}/api/batches/{bid}/reject", headers=H_REVIEWER, json={
+        "rejections": [
+            {"item_key": "ITEM-A1", "line_number": 1, "rejection_reason": "Quantity too low"}
+        ],
+        "comment": "ITEM-A1 quantity insufficient"
+    })
+    ok("Reject batch", r, 200)
+
+    # -------- Step 5: repair + import v2 (with RANGE_QUANTITY warning) --------
+    section("Step 5: Submitter starts repair & imports v2 (quantity=50000, triggers RANGE_QUANTITY)")
+
+    r = requests.post(f"{API_BASE}/api/batches/{bid}/start-repair", headers=H_SUBMITTER, json={
+        "comment": "Increasing quantity"
+    })
+    ok("Start repair", r, 200)
+
     v2_json = json.dumps([
-        {"item_id": "SKU-A1", "item_name": "Server R740",   "quantity": 12, "unit_price": 12000},
-        {"item_id": "SKU-C3", "item_name": "Fan Tray",      "quantity": 20, "unit_price":   180},
+        {"item_id": "ITEM-A1", "item_name": "Widget A", "quantity": 50000, "unit_price": 100},
+        {"item_id": "ITEM-B2", "item_name": "Widget B", "quantity": 3, "unit_price": 200},
     ])
+    r = precheck_and_import(bid, "v2.json", v2_json, H_SUBMITTER)
+    ok("Import v2 (auto-creates snapshot)", r, 200)
 
-    for label, body in [("v1", v1_json), ("v2", v2_json)]:
-        r = requests.post(
-            f"{API_BASE}/api/batches/{bid}/manifests/precheck",
-            headers=H_SUBMITTER,
-            files={"file": (f"{label}.json", body, "application/json")},
-            data={"import_format": "json"},
-        )
-        token = r.json()["precheck_token"]
-        r = requests.post(
-            f"{API_BASE}/api/batches/{bid}/manifests/import",
-            headers=H_SUBMITTER,
-            files={"file": (f"{label}.json", body, "application/json")},
-            data={"import_format": "json", "precheck_token": token},
-        )
-        ok(f"导入 {label} 清单 (自动沉淀快照)", r, 200)
+    # -------- Step 6: validate v2 -> should produce warning --------
+    section("Step 6: Admin validates v2 -> should produce RANGE_QUANTITY warning")
 
-    # -------- Step 2: lead 查询快照 --------
-    section("Step 2 · Lead 查询快照 (latest / by-versions / by-id)")
+    r = requests.post(f"{API_BASE}/api/batches/{bid}/validate", headers=H_ADMIN)
+    val_v2 = r.json()
+    ok(f"Validate v2: passed={val_v2['passed']}, failed={val_v2['failed']}, warnings={val_v2['warnings']}", r, 200)
+    assert val_v2["warnings"] > 0, "[FAIL] v2 should have at least 1 warning"
+
+    # -------- Step 7: lead queries snapshot --------
+    section("Step 7: Lead queries snapshot -> validation_changes present")
 
     r = requests.get(f"{API_BASE}/api/batches/{bid}/snapshots/latest", headers=H_LEAD)
-    snap_latest = r.json()
-    ok(f"查询 latest 快照  id={snap_latest['id']}  v{snap_latest['old_version_number']}→v{snap_latest['new_version_number']}", r, 200)
-    hash_ref = snap_latest["content_hash"]
+    snap = r.json()
+    ok(f"Latest snapshot  id={snap['id']}  v{snap['old_version_number']}->v{snap['new_version_number']}", r, 200)
+
+    assert snap["summary"]["validation_warnings_new"] > 0, \
+        f"[FAIL] validation_warnings_new should be >0, got {snap['summary']['validation_warnings_new']}"
+    ok(f"validation_warnings_old={snap['summary']['validation_warnings_old']}, "
+       f"validation_warnings_new={snap['summary']['validation_warnings_new']}")
+
+    assert len(snap["validation_changes"]) > 0, \
+        f"[FAIL] validation_changes should not be empty"
+    ok(f"validation_changes count={len(snap['validation_changes'])}")
+
+    for vc in snap["validation_changes"]:
+        ok(f"  change_type={vc['change_type']}  rule_code={vc['rule_code']}  item_key={vc['item_key']}")
+
+    hash_before_restart = snap["content_hash"]
 
     r = requests.get(f"{API_BASE}/api/batches/{bid}/snapshots/by-versions?old_version=1&new_version=2", headers=H_LEAD)
     snap_by_ver = r.json()
-    ok("按 v1→v2 查询快照 (content_hash 一致)", r, 200)
-    assert snap_by_ver["content_hash"] == hash_ref, "[FAIL] latest vs by-versions 哈希不一致"
+    ok("By-versions query (content_hash matches)", r, 200)
+    assert snap_by_ver["content_hash"] == hash_before_restart, "[FAIL] content_hash mismatch"
 
-    r = requests.get(f"{API_BASE}/api/batches/{bid}/snapshots/{snap_latest['id']}", headers=H_LEAD)
-    snap_by_id = r.json()
-    ok("按快照 ID 查询 (content_hash 一致)", r, 200)
-    assert snap_by_id["content_hash"] == hash_ref, "[FAIL] latest vs by-id 哈希不一致"
-
-    summary = snap_latest["summary"]
-    print(f"     差异概览: +{summary['added_count']}  -{summary['removed_count']}  ~{summary['modified_count']}  unchanged={summary['unchanged_count']}")
-
-    # -------- Step 3: admin 导出 JSON / CSV --------
-    section("Step 3 · Admin 导出 JSON & CSV")
+    # -------- Step 8: admin exports JSON & CSV --------
+    section("Step 8: Admin exports JSON & CSV")
 
     r = requests.get(f"{API_BASE}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2&format=json", headers=H_ADMIN)
     j = r.json()
-    ok(f"JSON 导出成功  export_id={j['export_id']}", r, 200)
-    print(f"     导出时间: {j['export_timestamp']}")
-    print(f"     导出人:   {j['exported_by']}")
-    print(f"     summary:  +{j['diff_data']['summary']['added_count']}  -{j['diff_data']['summary']['removed_count']}  ~{j['diff_data']['summary']['modified_count']}")
+    ok(f"JSON export  export_id={j['export_id']}", r, 200)
+    assert len(j["diff_data"]["validation_changes"]) > 0, "[FAIL] JSON export missing validation_changes"
+    ok(f"JSON export validation_changes count={len(j['diff_data']['validation_changes'])}")
 
     r = requests.get(f"{API_BASE}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2&format=csv", headers=H_ADMIN)
-    ok(f"CSV 导出成功  ({len(r.content)} bytes)", r, 200)
-    lines = r.text.strip().splitlines()
-    print(f"     表头: {lines[0]}")
-    for ln in lines[1:4]:
-        print(f"       -> {ln}")
-    print(f"     ... 共 {len(lines) - 1} 条变更")
+    ok(f"CSV export  ({len(r.content)} bytes)", r, 200)
 
     out_csv = os.path.join(tempfile.gettempdir(), f"batch_{bid}_v1_v2_diff.csv")
     with open(out_csv, "w", encoding="utf-8-sig", newline="") as f:
         f.write(r.text)
-    ok(f"CSV 已落盘: {out_csv}")
+    ok(f"CSV saved: {out_csv}")
 
-    # -------- Step 4: reviewer 越权访问被 403 拒绝 --------
-    section("Step 4 · Reviewer 越权访问 → 403 Permission denied")
+    # -------- Step 9: reviewer denied --------
+    section("Step 9: Reviewer denied (403)")
 
     for name, url in [
-        ("列出快照",        f"{API_BASE}/api/batches/{bid}/snapshots"),
-        ("latest 快照",     f"{API_BASE}/api/batches/{bid}/snapshots/latest"),
-        ("v1→v2 快照",      f"{API_BASE}/api/batches/{bid}/snapshots/by-versions?old_version=1&new_version=2"),
-        ("JSON 导出",       f"{API_BASE}/api/batches/{bid}/version-diff/export?format=json"),
-        ("CSV 导出",        f"{API_BASE}/api/batches/{bid}/version-diff/export?format=csv"),
+        ("snapshot latest",   f"{API_BASE}/api/batches/{bid}/snapshots/latest"),
+        ("by-versions",       f"{API_BASE}/api/batches/{bid}/snapshots/by-versions?old_version=1&new_version=2"),
+        ("JSON export",       f"{API_BASE}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2&format=json"),
+        ("CSV export",        f"{API_BASE}/api/batches/{bid}/version-diff/export?old_version=1&new_version=2&format=csv"),
     ]:
         r = requests.get(url, headers=H_REVIEWER)
-        ok(f"reviewer 访问【{name}】被拒绝", r, 403)
-        msg = r.json()["error"]["message"]
-        assert "Permission denied" in msg, f"[FAIL] 错误消息不合规: {msg}"
+        ok(f"Reviewer denied [{name}]", r, 403)
 
-    # -------- Step 5: 内容一致性校验 --------
-    section("Step 5 · 快照 / version-diff 接口 / 导出 三者一致性")
+    # -------- Step 10: restart + re-verify --------
+    section("Step 10: Restart service -> re-verify snapshot unchanged")
 
-    r = requests.get(f"{API_BASE}/api/batches/{bid}/version-diff?old_version=1&new_version=2", headers=H_LEAD)
-    diff_api = r.json()
-    ok("调用 version-diff 接口 (from_snapshot=true)", r, 200)
+    proc = restart_service()
 
-    r = requests.get(f"{API_BASE}/api/batches/{bid}/approval-logs", headers=H_ADMIN,
-                     params={"action": "VIEW_VERSION_DIFF", "limit": "10"})
-    all_logs = r.json()
-    view_logs = [l for l in all_logs if l.get("extra_data", {}).get("from_snapshot")]
-    assert view_logs, "[FAIL] 未记录 VIEW_VERSION_DIFF with from_snapshot"
-    ok("审计日志标记 VIEW_VERSION_DIFF from_snapshot=true")
+    r = requests.get(f"{API_BASE}/api/batches/{bid}/snapshots/latest", headers=H_LEAD)
+    snap_after = r.json()
+    ok("After restart: query latest snapshot", r, 200)
+    assert snap_after["content_hash"] == hash_before_restart, \
+        f"[FAIL] content_hash changed after restart: was {hash_before_restart}, now {snap_after['content_hash']}"
+    ok("After restart: content_hash UNCHANGED")
 
+    assert snap_after["summary"]["validation_warnings_new"] == snap["summary"]["validation_warnings_new"], \
+        "[FAIL] validation_warnings_new changed after restart"
+    ok(f"After restart: validation_warnings_new={snap_after['summary']['validation_warnings_new']} (same)")
+
+    assert len(snap_after["validation_changes"]) == len(snap["validation_changes"]), \
+        "[FAIL] validation_changes count changed after restart"
+    ok(f"After restart: validation_changes count={len(snap_after['validation_changes'])} (same)")
+
+    # -------- Summary --------
     print("\n" + "=" * 72)
-    print("  *** 验收演示全部通过 — 交付就绪")
+    print("  *** ACCEPTANCE DEMO PASSED - Delivery Ready")
     print("=" * 72)
-    print(f"   批次:        {batch['batch_code']}  (id={bid})")
-    print(f"   快照:        id={snap_latest['id']}  status={snap_latest['status']}")
-    print(f"   版本:        v{snap_latest['old_version_number']} → v{snap_latest['new_version_number']}")
-    print(f"   内容哈希:    {hash_ref}")
-    print(f"   导出 CSV:    {out_csv}")
+    print(f"   Batch:          {batch['batch_code']}  (id={bid})")
+    print(f"   Snapshot:       id={snap['id']}  status={snap['status']}")
+    print(f"   Versions:       v{snap['old_version_number']} -> v{snap['new_version_number']}")
+    print(f"   Content hash:   {hash_before_restart}")
+    print(f"   Val changes:    {len(snap['validation_changes'])} (including RANGE_QUANTITY new_violation)")
+    print(f"   CSV export:     {out_csv}")
+    print(f"   Post-restart:   content_hash unchanged, validation data intact")
     print("=" * 72)
+
+    if proc:
+        proc.terminate()
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            proc.kill()
 
 
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ from app.dependencies import get_current_user, get_batch_or_404, require_lead, r
 from app.diff_engine import (
     calculate_version_diff, save_diff_snapshot,
     get_snapshot_by_versions, get_latest_snapshot, list_snapshots,
-    snapshot_to_diff_response
+    snapshot_to_diff_response, _is_snapshot_stale, refresh_snapshot
 )
 
 router = APIRouter(prefix="/api", tags=["报告与历史查询"])
@@ -405,6 +405,12 @@ def _snapshot_to_list_response(snap: VersionDiffSnapshot) -> dict:
     }
 
 
+def _ensure_snapshot_fresh(db: Session, snap, current_user: User):
+    if _is_snapshot_stale(db, snap):
+        snap = refresh_snapshot(db, snap, current_user)
+    return snap
+
+
 def _get_or_compute_diff(
     db: Session,
     batch: DeliveryBatch,
@@ -412,13 +418,8 @@ def _get_or_compute_diff(
     new_version: ManifestVersion,
     current_user: User
 ) -> tuple:
-    snapshot = get_snapshot_by_versions(
-        db, batch.id, old_version.version_number, new_version.version_number
-    )
-    if snapshot:
-        return snapshot_to_diff_response(snapshot), True, snapshot
-    diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
-    return diff, False, None
+    from app.diff_engine import get_or_compute_diff as _engine_get_or_compute
+    return _engine_get_or_compute(db, batch, old_version, new_version, current_user)
 
 
 @router.get("/batches/{batch_id}/version-diff", response_model=VersionDiffResponse)
@@ -517,6 +518,7 @@ def get_latest_version_diff_snapshot(
             detail="该批次尚无有效版本差异快照。请先导入至少两个版本的清单。"
         )
 
+    snap = _ensure_snapshot_fresh(db, snap, current_user)
     diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
@@ -563,6 +565,7 @@ def get_snapshot_by_version_pair(
             detail=f"未找到 v{old_version} -> v{new_version} 的有效快照。"
         )
 
+    snap = _ensure_snapshot_fresh(db, snap, current_user)
     diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
@@ -611,6 +614,7 @@ def get_snapshot_by_id(
             detail=f"快照 ID {snapshot_id} 不存在或不属于该批次"
         )
 
+    snap = _ensure_snapshot_fresh(db, snap, current_user)
     diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
