@@ -1,8 +1,8 @@
+import os
 from sqlalchemy import Column, Integer, String, Text, DateTime, ForeignKey, JSON, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.database import Base
-
 
 PRECHECK_ACTION_NEW_VERSION = "NEW_VERSION"
 PRECHECK_ACTION_REUSE_VERSION = "REUSE_VERSION"
@@ -11,7 +11,7 @@ PRECHECK_ACTION_CONFLICT = "CONFLICT"
 PRECHECK_CONFLICT_STATUS = "STATUS_CONFLICT"
 PRECHECK_CONFLICT_UNRESOLVED_REJECTIONS = "UNRESOLVED_REJECTIONS"
 
-PRECHECK_TOKEN_TTL_SECONDS = 1800
+PRECHECK_TOKEN_TTL_SECONDS = int(os.environ.get("PRECHECK_TOKEN_TTL_SECONDS", "1800"))
 
 
 class ImportPrecheck(Base):

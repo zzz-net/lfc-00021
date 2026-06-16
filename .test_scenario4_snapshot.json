@@ -1,6 +1,6 @@
 {
-  "batch_id": 44,
-  "batch_code": "S4-E4ACE0",
+  "batch_id": 59,
+  "batch_code": "S4-554DEA",
   "precheck_action_before": "NEW_VERSION",
   "precheck_has_conflict_before": true,
   "precheck_planned_before": 2,
@@ -9,6 +9,6 @@
   "precheck_content_hash_before": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d",
   "pre_logs_count_before": 2,
   "versions_count_before": 1,
-  "token_before": "Q-29wy2_utw0SAmzT8boAm6APOMa6lj5Mo0owhmpjqg",
+  "token_before": "3UES_yjfATPej-PrSkC4hdz_lPbI7cs6BkLZBDgZM1w",
   "message_before": "预检查通过：将创建新版本 v2。 注意：存在 1 项提醒，请确认后继续。"
 }

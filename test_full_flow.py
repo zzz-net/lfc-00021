@@ -16,6 +16,28 @@ failed = 0
 SUFFIX = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 BATCH_CODE = f"BATCH-2026-Q2-{SUFFIX}"
 
+
+def precheck_and_import(bid, filename, filepath, user=H_SUBMITTER):
+    with open(filepath, "rb") as f:
+        r = requests.post(
+            f"{API}/api/batches/{bid}/manifests/precheck",
+            headers=user,
+            files={"file": (filename, f, "text/csv")},
+            data={"import_format": "auto"},
+        )
+    if r.status_code != 200:
+        return r
+    token = r.json().get("precheck_token")
+    with open(filepath, "rb") as f:
+        r = requests.post(
+            f"{API}/api/batches/{bid}/manifests/import",
+            headers=user,
+            files={"file": (filename, f, "text/csv")},
+            data={"import_format": "auto", "precheck_token": token},
+        )
+    return r
+
+
 def test(name, response, expect_status=None, expect_success=None, check_fn=None):
     global passed, failed
     ok = True
@@ -71,24 +93,30 @@ BATCH_ID = data["id"] if data else None
 print(f"  BATCH_ID = {BATCH_ID}")
 
 print("\n" + "=" * 70)
-print("STEP 3: 导入有错误的 CSV (验证失败路径 - 应不创建新版本)")
+print("STEP 3: 预检查有错误的 CSV (预检查识别 CONFLICT，导入被拒绝)")
 with open("samples/manifest_sample_with_errors.csv", "rb") as f:
-    r = requests.post(f"{API}/api/batches/{BATCH_ID}/manifests/import",
+    r = requests.post(
+        f"{API}/api/batches/{BATCH_ID}/manifests/precheck",
         headers=H_SUBMITTER,
         files={"file": ("manifest_sample_with_errors.csv", f, "text/csv")},
-        data={"import_format": "auto"}
+        data={"import_format": "auto"},
     )
-data = test("导入错误清单 - success=false", r, 200, False,
-    check_fn=lambda d: len(d["errors"]) > 0 and d["manifest_version_id"] is None)
+data = test("预检查错误清单 - CONFLICT", r, 200, True,
+    check_fn=lambda d: d["action_type"] == "CONFLICT" and d["can_import"] is False and len(d["parse_errors"]) > 0)
+if data and data.get("precheck_token"):
+    bad_token = data["precheck_token"]
+    with open("samples/manifest_sample_with_errors.csv", "rb") as f:
+        r = requests.post(
+            f"{API}/api/batches/{BATCH_ID}/manifests/import",
+            headers=H_SUBMITTER,
+            files={"file": ("manifest_sample_with_errors.csv", f, "text/csv")},
+            data={"import_format": "auto", "precheck_token": bad_token},
+        )
+    test("CONFLICT token 导入被拒绝 - 400", r, 400)
 
 print("\n" + "=" * 70)
-print("STEP 4: 导入正确的 v1 清单 CSV")
-with open("samples/manifest_sample_good.csv", "rb") as f:
-    r = requests.post(f"{API}/api/batches/{BATCH_ID}/manifests/import",
-        headers=H_SUBMITTER,
-        files={"file": ("manifest_sample_good.csv", f, "text/csv")},
-        data={"import_format": "auto"}
-    )
+print("STEP 4: 导入正确的 v1 清单 CSV (预检查 → 导入)")
+r = precheck_and_import(BATCH_ID, "manifest_sample_good.csv", "samples/manifest_sample_good.csv")
 data = test("导入正确清单 v1 - success=true", r, 200, True,
     check_fn=lambda d: d["version_number"] == 1 and d["item_count"] == 5)
 V1_ID = data["manifest_version_id"] if data else None
@@ -143,13 +171,8 @@ data = test("进入返修状态", r, 200, True,
     check_fn=lambda d: d["batch_status"] == "repairing")
 
 print("\n" + "=" * 70)
-print("STEP 12: 导入修订版 v2 清单 (应自动标记旧驳回为已解决)")
-with open("samples/manifest_sample_repaired_v2.csv", "rb") as f:
-    r = requests.post(f"{API}/api/batches/{BATCH_ID}/manifests/import",
-        headers=H_SUBMITTER,
-        files={"file": ("manifest_sample_repaired_v2.csv", f, "text/csv")},
-        data={"import_format": "auto"}
-    )
+print("STEP 12: 导入修订版 v2 清单 (预检查 → 导入，自动标记旧驳回为已解决)")
+r = precheck_and_import(BATCH_ID, "manifest_sample_repaired_v2.csv", "samples/manifest_sample_repaired_v2.csv")
 data = test("导入 v2 清单", r, 200, True,
     check_fn=lambda d: d["version_number"] == 2 and d["item_count"] == 7)
 

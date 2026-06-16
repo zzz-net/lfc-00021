@@ -8,6 +8,7 @@ import json
 import uuid
 import sys
 import time
+import os
 from datetime import datetime, timedelta
 
 API = "http://127.0.0.1:8000"
@@ -690,6 +691,48 @@ def scenario_8_user_visible_acceptance():
     return bid
 
 
+def scenario_9_token_expiry():
+    print("\n" + "=" * 70)
+    print("场景 9：precheck_token 过期后导入被拒绝")
+    print("=" * 70)
+    bid, code = make_batch("S9")
+    print(f"\n  批次 id={bid}, code={code}")
+
+    r = precheck(bid, "v1.csv", V1)
+    case("预检查 status=200", r.status_code == 200)
+    res = r.json()
+    tok = res["precheck_token"]
+    case("预检查 can_import=True", res["can_import"] is True)
+    case("预检查 expires_at 存在", res.get("expires_at") is not None)
+
+    import sqlite3
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "delivery_acceptance.db")
+    conn = sqlite3.connect(db_path)
+    cur = conn.cursor()
+    past_time = (datetime.utcnow() - timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S")
+    cur.execute(
+        "UPDATE import_prechecks SET expires_at = ? WHERE precheck_token = ?",
+        (past_time, tok),
+    )
+    conn.commit()
+    conn.close()
+    case("已将 token expires_at 设为 1 小时前", True)
+
+    r = do_import(bid, "v1.csv", V1, tok)
+    case("过期 token 导入 → 400", r.status_code == 400, f"actual={r.status_code}")
+    err_msg = r.json().get("error", {}).get("message", "")
+    case("错误提示含'已过期'", "过期" in err_msg, f"msg={err_msg[:80]}")
+
+    r = precheck(bid, "v1_fresh.csv", V1)
+    case("重新预检查获取新 token → 200", r.status_code == 200)
+    fresh_tok = r.json()["precheck_token"]
+    r = do_import(bid, "v1_fresh.csv", V1, fresh_tok)
+    case("新 token 导入成功 → 200", r.status_code == 200, f"actual={r.status_code}")
+    case("新 token 导入 success=True", r.json()["success"] is True)
+
+    return bid
+
+
 def run_all(part="ALL"):
     print("=" * 70)
     print("清单导入预检查 + 冲突确认 - 回归测试套件")
@@ -721,6 +764,8 @@ def run_all(part="ALL"):
         bids.append(scenario_7_approval_log_integration())
     if part in ("ALL", "S8"):
         bids.append(scenario_8_user_visible_acceptance())
+    if part in ("ALL", "S9"):
+        bids.append(scenario_9_token_expiry())
 
     print("\n" + "=" * 70)
     print("测试结果汇总")
@@ -736,9 +781,9 @@ def run_all(part="ALL"):
 
 if __name__ == "__main__":
     part = sys.argv[1] if len(sys.argv) > 1 else "ALL"
-    valid = {"ALL", "S1", "S2", "S3", "S4A", "S4B", "S5", "S6", "S7", "S8"}
+    valid = {"ALL", "S1", "S2", "S3", "S4A", "S4B", "S5", "S6", "S7", "S8", "S9"}
     if part not in valid:
-        print(f"Usage: python {sys.argv[0]} [ALL|S1|S2|S3|S4A|S4B|S5|S6|S7|S8]")
+        print(f"Usage: python {sys.argv[0]} [ALL|S1|S2|S3|S4A|S4B|S5|S6|S7|S8|S9]")
         print("  S4A: 保存重启前快照  →  重启服务  →  S4B: 对比重启后快照")
         sys.exit(1)
     sys.exit(run_all(part))
