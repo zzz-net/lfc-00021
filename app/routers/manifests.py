@@ -190,6 +190,21 @@ async def import_manifest(
             message=f"发现 {len(critical_errors)} 个字段错误，未创建新版本，旧清单保持不变。请修复后重新导入。"
         )
 
+    duplicate_version = db.query(ManifestVersion).filter(
+        ManifestVersion.batch_id == batch_id,
+        ManifestVersion.raw_content == raw_content,
+        ManifestVersion.import_format == detected_format
+    ).first()
+    if duplicate_version:
+        return ImportResponse(
+            success=True,
+            manifest_version_id=duplicate_version.id,
+            version_number=duplicate_version.version_number,
+            item_count=duplicate_version.item_count,
+            errors=[],
+            message=f"内容无变更，复用现有版本 v{duplicate_version.version_number}。"
+        )
+
     old_version_id = batch.current_manifest_version_id
 
     existing_versions = db.query(ManifestVersion).filter(

@@ -1,0 +1,20 @@
+[
+  {
+    "item_id": "ITEM-R1",
+    "item_name": "Router Board RevB",
+    "quantity": 2,
+    "unit_price": 1200
+  },
+  {
+    "item_id": "ITEM-R2",
+    "item_name": "Power Module",
+    "quantity": 4,
+    "unit_price": 300
+  },
+  {
+    "item_id": "ITEM-R3",
+    "item_name": "Fan Tray",
+    "quantity": 1,
+    "unit_price": 180
+  }
+]

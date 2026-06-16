@@ -1,6 +1,6 @@
 {
   "report_title": "交付批次验收报告",
-  "generated_at": "2026-06-17T01:18:24.958092",
+  "generated_at": "2026-06-17T01:41:47.653588",
   "batch_summary": {
     "id": 1,
     "batch_code": "BATCH-2026-Q2-001",
@@ -12,8 +12,8 @@
       "username": "submitter_chen",
       "display_name": "陈交付"
     },
-    "created_at": "2026-06-16T17:18:24",
-    "archived_at": "2026-06-17T01:18:24.886915"
+    "created_at": "2026-06-16T17:41:46",
+    "archived_at": "2026-06-17T01:41:47.572616"
   },
   "validation_summary": {
     "total_rules": 9,
@@ -35,7 +35,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T17:18:24",
+      "imported_at": "2026-06-16T17:41:47",
       "item_count": 5,
       "validation_status": "passed",
       "validation_summary": {
@@ -135,7 +135,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T17:18:24",
+      "imported_at": "2026-06-16T17:41:47",
       "item_count": 7,
       "validation_status": "passed",
       "validation_summary": {
@@ -241,7 +241,7 @@
   ],
   "approval_workflow": [
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:46",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -255,7 +255,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -274,7 +274,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -288,7 +288,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 3,
         "username": "reviewer_li",
@@ -318,7 +318,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -332,7 +332,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -351,7 +351,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -365,7 +365,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 2,
         "username": "lead_wang",
@@ -378,11 +378,11 @@
       "comment": "验收通过，批次交付完成",
       "extra_data": {
         "approved_by": "lead_wang",
-        "approved_at": "2026-06-17T01:18:24.849986"
+        "approved_at": "2026-06-17T01:41:47.538854"
       }
     },
     {
-      "timestamp": "2026-06-16T17:18:24",
+      "timestamp": "2026-06-16T17:41:47",
       "actor": {
         "id": 2,
         "username": "lead_wang",

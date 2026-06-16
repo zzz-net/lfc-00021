@@ -1,0 +1,13 @@
+[
+  {
+    "item_id": "ITEM-BAD-1",
+    "item_name": "",
+    "quantity": 1
+  },
+  {
+    "item_id": "ITEM-BAD-2",
+    "item_name": "Broken PSU",
+    "quantity": 2,
+    "unit_price": 99
+  }
+]
