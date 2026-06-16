@@ -7,6 +7,9 @@ import json
 import io
 import csv
 import hashlib
+import logging
+
+logger = logging.getLogger(__name__)
 
 from app.database import get_db
 from app.models import (
@@ -407,7 +410,17 @@ def _snapshot_to_list_response(snap: VersionDiffSnapshot) -> dict:
 
 def _ensure_snapshot_fresh(db: Session, snap, current_user: User):
     if _is_snapshot_stale(db, snap):
+        logger.info(
+            "Snapshot %s is stale, refreshing before query",
+            snap.snapshot_key
+        )
         snap = refresh_snapshot(db, snap, current_user)
+        db.commit()
+        db.refresh(snap)
+        logger.info(
+            "Snapshot %s refreshed, new content_hash=%s...",
+            snap.snapshot_key, snap.content_hash[:16]
+        )
     return snap
 
 
@@ -715,13 +728,26 @@ def _build_diff_csv_rows(diff: VersionDiffResponse) -> List[List[str]]:
         ])
 
     for vc in diff.validation_changes:
+        old_display = ""
+        new_display = ""
+        if vc.old_passed is not None:
+            status = "PASS" if vc.old_passed else "FAIL"
+            sev = f"[{vc.old_severity}]" if vc.old_severity else ""
+            msg = vc.old_message or ""
+            old_display = f"{status}{sev} {msg}".strip()
+        if vc.new_passed is not None:
+            status = "PASS" if vc.new_passed else "FAIL"
+            sev = f"[{vc.new_severity}]" if vc.new_severity else ""
+            msg = vc.new_message or ""
+            new_display = f"{status}{sev} {msg}".strip()
+
         rows.append([
             "validation_change",
             vc.item_key or "",
             vc.change_type,
             vc.field_name or "",
-            (vc.old_message or "") if vc.old_passed is False else "",
-            (vc.new_message or "") if vc.new_passed is False else "",
+            old_display,
+            new_display,
             vc.change_type,
             "",
             "",

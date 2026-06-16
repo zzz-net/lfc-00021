@@ -378,6 +378,23 @@ class RejectionInfo(BaseModel):
     resolved_at: Optional[datetime] = None
 
 
+VALIDATION_CHANGE_NEW_VIOLATION = "new_violation"
+VALIDATION_CHANGE_RESOLVED = "resolved"
+VALIDATION_CHANGE_MODIFIED = "modified"
+VALIDATION_CHANGE_NEW_PASSED = "new_passed"
+VALIDATION_CHANGE_REMOVED_PASSED = "removed_passed"
+VALIDATION_CHANGE_UNCHANGED = "unchanged"
+
+VALID_VALIDATION_CHANGE_TYPES = [
+    VALIDATION_CHANGE_NEW_VIOLATION,
+    VALIDATION_CHANGE_RESOLVED,
+    VALIDATION_CHANGE_MODIFIED,
+    VALIDATION_CHANGE_NEW_PASSED,
+    VALIDATION_CHANGE_REMOVED_PASSED,
+    VALIDATION_CHANGE_UNCHANGED,
+]
+
+
 class ValidationChange(BaseModel):
     item_key: Optional[str] = None
     field_name: Optional[str] = None
@@ -427,6 +444,17 @@ class VersionDiffSummary(BaseModel):
     validation_errors_new: int
     validation_warnings_old: int
     validation_warnings_new: int
+    validation_passed_old: int
+    validation_passed_new: int
+    validation_total_old: int
+    validation_total_new: int
+    validation_changes_new_violation: int
+    validation_changes_resolved: int
+    validation_changes_modified: int
+    validation_changes_new_passed: int
+    validation_changes_removed_passed: int
+    validation_changes_unchanged: int
+    validation_changes_total: int
 
 
 class VersionDiffResponse(BaseModel):

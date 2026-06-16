@@ -14,8 +14,14 @@ from app.schemas import (
     ItemDiff, ItemDiffSummary, FieldChange,
     RejectionInfo, ValidationChange, ImportInfo,
     DIFF_ACTION_ADDED, DIFF_ACTION_REMOVED,
-    DIFF_ACTION_MODIFIED, DIFF_ACTION_UNCHANGED
+    DIFF_ACTION_MODIFIED, DIFF_ACTION_UNCHANGED,
+    VALIDATION_CHANGE_NEW_VIOLATION, VALIDATION_CHANGE_RESOLVED,
+    VALIDATION_CHANGE_MODIFIED, VALIDATION_CHANGE_NEW_PASSED,
+    VALIDATION_CHANGE_REMOVED_PASSED, VALIDATION_CHANGE_UNCHANGED
 )
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def _sha256_hex(s: str) -> str:
@@ -183,6 +189,13 @@ def _collect_validation_changes(
     changes = []
     all_keys = sorted(set(list(old_map.keys()) + list(new_map.keys())))
 
+    new_violation_count = 0
+    resolved_count = 0
+    modified_count = 0
+    new_passed_count = 0
+    removed_passed_count = 0
+    unchanged_count = 0
+
     for k in all_keys:
         old_r = old_map.get(k)
         new_r = new_map.get(k)
@@ -196,8 +209,20 @@ def _collect_validation_changes(
                     new_severity=new_r.severity,
                     new_passed=new_r.passed,
                     new_message=new_r.message,
-                    change_type="new_violation"
+                    change_type=VALIDATION_CHANGE_NEW_VIOLATION
                 ))
+                new_violation_count += 1
+            else:
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    new_severity=new_r.severity,
+                    new_passed=new_r.passed,
+                    new_message=new_r.message,
+                    change_type=VALIDATION_CHANGE_NEW_PASSED
+                ))
+                new_passed_count += 1
         elif new_r is None:
             if not old_r.passed:
                 changes.append(ValidationChange(
@@ -207,8 +232,20 @@ def _collect_validation_changes(
                     old_severity=old_r.severity,
                     old_passed=old_r.passed,
                     old_message=old_r.message,
-                    change_type="resolved"
+                    change_type=VALIDATION_CHANGE_RESOLVED
                 ))
+                resolved_count += 1
+            else:
+                changes.append(ValidationChange(
+                    item_key=old_r.item_key,
+                    field_name=old_r.field_name,
+                    rule_code=old_r.rule_code,
+                    old_severity=old_r.severity,
+                    old_passed=old_r.passed,
+                    old_message=old_r.message,
+                    change_type=VALIDATION_CHANGE_REMOVED_PASSED
+                ))
+                removed_passed_count += 1
         else:
             old_failed = not old_r.passed
             new_failed = not new_r.passed
@@ -223,8 +260,9 @@ def _collect_validation_changes(
                     new_passed=new_r.passed,
                     old_message=old_r.message,
                     new_message=new_r.message,
-                    change_type="resolved"
+                    change_type=VALIDATION_CHANGE_RESOLVED
                 ))
+                resolved_count += 1
             elif not old_failed and new_failed:
                 changes.append(ValidationChange(
                     item_key=new_r.item_key,
@@ -236,8 +274,9 @@ def _collect_validation_changes(
                     new_passed=new_r.passed,
                     old_message=old_r.message,
                     new_message=new_r.message,
-                    change_type="new_violation"
+                    change_type=VALIDATION_CHANGE_NEW_VIOLATION
                 ))
+                new_violation_count += 1
             elif old_failed and new_failed and (
                 old_r.severity != new_r.severity or
                 old_r.message != new_r.message
@@ -252,8 +291,33 @@ def _collect_validation_changes(
                     new_passed=new_r.passed,
                     old_message=old_r.message,
                     new_message=new_r.message,
-                    change_type="modified"
+                    change_type=VALIDATION_CHANGE_MODIFIED
                 ))
+                modified_count += 1
+            else:
+                changes.append(ValidationChange(
+                    item_key=new_r.item_key,
+                    field_name=new_r.field_name,
+                    rule_code=new_r.rule_code,
+                    old_severity=old_r.severity,
+                    new_severity=new_r.severity,
+                    old_passed=old_r.passed,
+                    new_passed=new_r.passed,
+                    old_message=old_r.message,
+                    new_message=new_r.message,
+                    change_type=VALIDATION_CHANGE_UNCHANGED
+                ))
+                unchanged_count += 1
+
+    logger.debug(
+        f"Validation changes computed: old_version=%s, new_version=%s, "
+        "new_violation=%d, resolved=%d, modified=%d, "
+        "new_passed=%d, removed_passed=%d, unchanged=%d, total=%d",
+        old_version_id, new_version_id,
+        new_violation_count, resolved_count, modified_count,
+        new_passed_count, removed_passed_count, unchanged_count,
+        len(changes)
+    )
 
     return changes
 
@@ -264,7 +328,9 @@ def _count_validation_issues(db: Session, version_id: int) -> tuple:
     ).all()
     errors = sum(1 for r in results if not r.passed and r.severity == "error")
     warnings = sum(1 for r in results if not r.passed and r.severity == "warning")
-    return errors, warnings
+    passed = sum(1 for r in results if r.passed)
+    total = len(results)
+    return errors, warnings, passed, total
 
 
 def _count_unresolved_rejections(db: Session, batch_id: int, version_id: int) -> int:
@@ -273,6 +339,23 @@ def _count_unresolved_rejections(db: Session, batch_id: int, version_id: int) ->
         RejectionRecord.manifest_version_id == version_id,
         RejectionRecord.resolved == False
     ).count()
+
+
+def _count_validation_change_types(changes: List[ValidationChange]) -> dict:
+    counts = {
+        "new_violation": 0,
+        "resolved": 0,
+        "modified": 0,
+        "new_passed": 0,
+        "removed_passed": 0,
+        "unchanged": 0,
+    }
+    for c in changes:
+        ct = c.change_type
+        if ct in counts:
+            counts[ct] += 1
+    counts["total"] = len(changes)
+    return counts
 
 
 def calculate_version_diff(
@@ -294,13 +377,15 @@ def calculate_version_diff(
     unresolved_old = _count_unresolved_rejections(db, batch.id, old_version.id)
     unresolved_new = _count_unresolved_rejections(db, batch.id, new_version.id)
 
-    val_errors_old, val_warnings_old = _count_validation_issues(db, old_version.id)
-    val_errors_new, val_warnings_new = _count_validation_issues(db, new_version.id)
+    val_errors_old, val_warnings_old, val_passed_old, val_total_old = _count_validation_issues(db, old_version.id)
+    val_errors_new, val_warnings_new, val_passed_new, val_total_new = _count_validation_issues(db, new_version.id)
 
     unresolved_rejections = _collect_unresolved_rejections(
         db, batch.id, old_version.id, new_version.id
     )
     validation_changes = _collect_validation_changes(db, old_version.id, new_version.id)
+
+    val_change_counts = _count_validation_change_types(validation_changes)
 
     username, display_name = _get_user_info(db, current_user.id)
 
@@ -330,7 +415,31 @@ def calculate_version_diff(
         validation_errors_old=val_errors_old,
         validation_errors_new=val_errors_new,
         validation_warnings_old=val_warnings_old,
-        validation_warnings_new=val_warnings_new
+        validation_warnings_new=val_warnings_new,
+        validation_passed_old=val_passed_old,
+        validation_passed_new=val_passed_new,
+        validation_total_old=val_total_old,
+        validation_total_new=val_total_new,
+        validation_changes_new_violation=val_change_counts["new_violation"],
+        validation_changes_resolved=val_change_counts["resolved"],
+        validation_changes_modified=val_change_counts["modified"],
+        validation_changes_new_passed=val_change_counts["new_passed"],
+        validation_changes_removed_passed=val_change_counts["removed_passed"],
+        validation_changes_unchanged=val_change_counts["unchanged"],
+        validation_changes_total=val_change_counts["total"],
+    )
+
+    logger.info(
+        "Version diff calculated: batch_id=%s, v%d -> v%d, "
+        "added=%d, removed=%d, modified=%d, unchanged=%d, "
+        "validation_changes=%d (new_violation=%d, resolved=%d, modified=%d, "
+        "new_passed=%d, removed_passed=%d, unchanged=%d)",
+        batch.id, old_version.version_number, new_version.version_number,
+        len(added), len(removed), len(modified), len(unchanged),
+        val_change_counts["total"],
+        val_change_counts["new_violation"], val_change_counts["resolved"],
+        val_change_counts["modified"], val_change_counts["new_passed"],
+        val_change_counts["removed_passed"], val_change_counts["unchanged"],
     )
 
     return VersionDiffResponse(
@@ -371,8 +480,16 @@ def save_diff_snapshot(
 
     if existing:
         if existing.content_hash == content_hash and existing.status == SNAPSHOT_VALID:
+            logger.debug(
+                "Snapshot %s already exists with same content hash, reusing (id=%d)",
+                snapshot_key, existing.id
+            )
             return existing
         if existing.status == SNAPSHOT_VALID:
+            logger.info(
+                "Superseding existing snapshot %s (id=%d)",
+                snapshot_key, existing.id
+            )
             existing.status = SNAPSHOT_SUPERSEDED
             existing.invalidated_at = datetime.now()
             existing.invalidated_by = creator.id
@@ -399,6 +516,14 @@ def save_diff_snapshot(
     )
     db.add(snapshot)
     db.flush()
+
+    logger.info(
+        "Created new snapshot %s (id=%d, hash=%s...), "
+        "validation_changes=%d items",
+        snapshot_key, snapshot.id, content_hash[:16],
+        len(diff.validation_changes)
+    )
+
     return snapshot
 
 
@@ -413,9 +538,23 @@ def get_or_compute_diff(
         db, batch.id, old_version.version_number, new_version.version_number
     )
     if snapshot:
+        logger.debug(
+            "Found existing snapshot %s for v%d -> v%d, checking staleness...",
+            snapshot.snapshot_key, old_version.version_number, new_version.version_number
+        )
         if _is_snapshot_stale(db, snapshot):
+            logger.info(
+                "Snapshot %s is stale, refreshing...",
+                snapshot.snapshot_key
+            )
             snapshot = refresh_snapshot(db, snapshot, current_user)
+            db.commit()
+            db.refresh(snapshot)
         return snapshot_to_diff_response(snapshot), True, snapshot
+    logger.debug(
+        "No snapshot found for v%d -> v%d, computing live diff...",
+        old_version.version_number, new_version.version_number
+    )
     diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
     return diff, False, None
 
@@ -482,16 +621,41 @@ def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
     snap_old_warnings = snapshot.summary_json.get("validation_warnings_old", 0)
     snap_new_errors = snapshot.summary_json.get("validation_errors_new", 0)
     snap_old_errors = snapshot.summary_json.get("validation_errors_old", 0)
+    snap_new_passed = snapshot.summary_json.get("validation_passed_new", 0)
+    snap_old_passed = snapshot.summary_json.get("validation_passed_old", 0)
+    snap_new_total = snapshot.summary_json.get("validation_total_new", 0)
+    snap_old_total = snapshot.summary_json.get("validation_total_old", 0)
+
+    stale_reasons = []
 
     if new_validated:
-        actual_new_errors, actual_new_warnings = _count_validation_issues(db, new_ver.id)
-        if actual_new_errors != snap_new_errors or actual_new_warnings != snap_new_warnings:
-            return True
+        actual_new_errors, actual_new_warnings, actual_new_passed, actual_new_total = _count_validation_issues(db, new_ver.id)
+        if (actual_new_errors != snap_new_errors or actual_new_warnings != snap_new_warnings
+                or actual_new_passed != snap_new_passed or actual_new_total != snap_new_total):
+            stale_reasons.append(
+                f"new_version validation changed: "
+                f"errors {snap_new_errors}->{actual_new_errors}, "
+                f"warnings {snap_new_warnings}->{actual_new_warnings}, "
+                f"passed {snap_new_passed}->{actual_new_passed}, "
+                f"total {snap_new_total}->{actual_new_total}"
+            )
+
+    elif snap_new_total > 0:
+        stale_reasons.append("new_version changed from validated to pending")
 
     if old_validated:
-        actual_old_errors, actual_old_warnings = _count_validation_issues(db, old_ver.id)
-        if actual_old_errors != snap_old_errors or actual_old_warnings != snap_old_warnings:
-            return True
+        actual_old_errors, actual_old_warnings, actual_old_passed, actual_old_total = _count_validation_issues(db, old_ver.id)
+        if (actual_old_errors != snap_old_errors or actual_old_warnings != snap_old_warnings
+                or actual_old_passed != snap_old_passed or actual_old_total != snap_old_total):
+            stale_reasons.append(
+                f"old_version validation changed: "
+                f"errors {snap_old_errors}->{actual_old_errors}, "
+                f"warnings {snap_old_warnings}->{actual_old_warnings}, "
+                f"passed {snap_old_passed}->{actual_old_passed}, "
+                f"total {snap_old_total}->{actual_old_total}"
+            )
+    elif snap_old_total > 0:
+        stale_reasons.append("old_version changed from validated to pending")
 
     actual_unresolved = db.query(RejectionRecord).filter(
         RejectionRecord.batch_id == snapshot.batch_id,
@@ -499,6 +663,16 @@ def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
     ).count()
     snap_unresolved = snapshot.summary_json.get("unresolved_rejections_new", 0)
     if actual_unresolved != snap_unresolved:
+        stale_reasons.append(
+            f"unresolved_rejections changed: {snap_unresolved}->{actual_unresolved}"
+        )
+
+    if stale_reasons:
+        logger.info(
+            "Snapshot %s (v%d -> v%d) is stale: %s",
+            snapshot.snapshot_key, snapshot.old_version_number, snapshot.new_version_number,
+            "; ".join(stale_reasons)
+        )
         return True
 
     return False
@@ -513,7 +687,16 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
         ManifestVersion.id == snapshot.new_version_id
     ).first()
     if not batch or not old_version or not new_version:
+        logger.warning(
+            "Cannot refresh snapshot %s: missing batch or versions",
+            snapshot.snapshot_key
+        )
         return snapshot
+
+    logger.info(
+        "Refreshing snapshot %s (v%d -> v%d)...",
+        snapshot.snapshot_key, snapshot.old_version_number, snapshot.new_version_number
+    )
 
     diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
 
@@ -524,8 +707,13 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
     new_hash = _compute_content_hash(diff)
 
     if snapshot.content_hash == new_hash:
+        logger.info(
+            "Snapshot %s content unchanged after refresh (hash=%s)",
+            snapshot.snapshot_key, new_hash[:16]
+        )
         return snapshot
 
+    old_hash = snapshot.content_hash
     snapshot.content_hash = new_hash
     snapshot.metadata_json = diff.metadata.model_dump(mode='json')
     snapshot.summary_json = diff.summary.model_dump(mode='json')
@@ -536,6 +724,15 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
     snapshot.unresolved_rejections_json = [r.model_dump(mode='json') for r in diff.unresolved_rejections]
     snapshot.validation_changes_json = [c.model_dump(mode='json') for c in diff.validation_changes]
     db.flush()
+
+    logger.info(
+        "Snapshot %s refreshed: hash %s... -> %s..., "
+        "validation_changes %d items",
+        snapshot.snapshot_key,
+        old_hash[:16], new_hash[:16],
+        len(diff.validation_changes)
+    )
+
     return snapshot
 
 
@@ -544,6 +741,12 @@ def refresh_snapshots_for_batch(db: Session, batch_id: int, current_user: User) 
         VersionDiffSnapshot.batch_id == batch_id,
         VersionDiffSnapshot.status == SNAPSHOT_VALID
     ).all()
+
+    logger.info(
+        "Refreshing snapshots for batch %d: found %d valid snapshots",
+        batch_id, len(snapshots)
+    )
+
     refreshed = 0
     for snap in snapshots:
         if _is_snapshot_stale(db, snap):
@@ -551,6 +754,15 @@ def refresh_snapshots_for_batch(db: Session, batch_id: int, current_user: User) 
             refreshed += 1
     if refreshed:
         db.commit()
+        logger.info(
+            "Refreshed %d/%d snapshots for batch %d",
+            refreshed, len(snapshots), batch_id
+        )
+    else:
+        logger.info(
+            "No stale snapshots found for batch %d, all %d snapshots are up to date",
+            batch_id, len(snapshots)
+        )
     return refreshed
 
 

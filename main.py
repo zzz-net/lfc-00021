@@ -3,12 +3,23 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from sqlalchemy.exc import SQLAlchemyError, IntegrityError
+import logging
+import sys
 
 from app.database import engine, Base, SessionLocal
 from app.models import *
 from app.seed_data import initialize_seed_data
 
 from app.routers import users, batches, manifests, validations, approvals, reports
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    handlers=[
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+logger = logging.getLogger(__name__)
 
 Base.metadata.create_all(bind=engine)
 
