@@ -1,6 +1,8 @@
 import requests
 import json
 import sys
+import random
+import string
 
 API = "http://127.0.0.1:8000"
 H_ADMIN = {"X-User-Id": "1"}
@@ -10,6 +12,9 @@ H_SUBMITTER = {"X-User-Id": "5"}
 
 passed = 0
 failed = 0
+
+SUFFIX = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+BATCH_CODE = f"BATCH-2026-Q2-{SUFFIX}"
 
 def test(name, response, expect_status=None, expect_success=None, check_fn=None):
     global passed, failed
@@ -54,14 +59,14 @@ r = requests.get(f"{API}/api/users/", headers=H_ADMIN)
 data = test("获取用户列表", r, 200, check_fn=lambda d: len(d) >= 6)
 
 print("\n" + "=" * 70)
-print("STEP 2: 创建交付批次 (submitter_chen, ID=5)")
+print(f"STEP 2: 创建交付批次 (submitter_chen, ID=5), code={BATCH_CODE}")
 r = requests.post(f"{API}/api/batches/", headers=H_SUBMITTER, json={
-    "batch_code": "BATCH-2026-Q2-001",
+    "batch_code": BATCH_CODE,
     "name": "2026年Q2服务器配件交付批次",
     "description": "包含主板、内存、硬盘、电源等服务器核心配件",
     "submitter_id": 5
 })
-data = test("创建批次", r, 201, check_fn=lambda d: d["status"] == "draft" and d["batch_code"] == "BATCH-2026-Q2-001")
+data = test("创建批次", r, 201, check_fn=lambda d: d["status"] == "draft" and d["batch_code"] == BATCH_CODE)
 BATCH_ID = data["id"] if data else None
 print(f"  BATCH_ID = {BATCH_ID}")
 

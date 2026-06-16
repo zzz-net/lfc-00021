@@ -1,9 +1,9 @@
 {
   "report_title": "交付批次验收报告",
-  "generated_at": "2026-06-17T01:41:47.653588",
+  "generated_at": "2026-06-17T02:03:25.675968",
   "batch_summary": {
-    "id": 1,
-    "batch_code": "BATCH-2026-Q2-001",
+    "id": 19,
+    "batch_code": "BATCH-2026-Q2-423N9R",
     "name": "2026年Q2服务器配件交付批次",
     "description": "包含主板、内存、硬盘、电源等服务器核心配件",
     "status": "archived",
@@ -12,8 +12,8 @@
       "username": "submitter_chen",
       "display_name": "陈交付"
     },
-    "created_at": "2026-06-16T17:41:46",
-    "archived_at": "2026-06-17T01:41:47.572616"
+    "created_at": "2026-06-16T18:03:24",
+    "archived_at": "2026-06-17T02:03:25.583173"
   },
   "validation_summary": {
     "total_rules": 9,
@@ -35,7 +35,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T17:41:47",
+      "imported_at": "2026-06-16T18:03:25",
       "item_count": 5,
       "validation_status": "passed",
       "validation_summary": {
@@ -135,7 +135,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T17:41:47",
+      "imported_at": "2026-06-16T18:03:25",
       "item_count": 7,
       "validation_status": "passed",
       "validation_summary": {
@@ -241,7 +241,7 @@
   ],
   "approval_workflow": [
     {
-      "timestamp": "2026-06-16T17:41:46",
+      "timestamp": "2026-06-16T18:03:24",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -255,7 +255,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -274,7 +274,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -288,7 +288,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 3,
         "username": "reviewer_li",
@@ -303,13 +303,13 @@
         "rejection_count": 2,
         "rejections": [
           {
-            "id": 1,
+            "id": 22,
             "item_key": "ITEM-002",
             "line_number": 3,
             "reason": "内存条描述中未明确标注 ECC 校验支持"
           },
           {
-            "id": 2,
+            "id": 23,
             "item_key": "ITEM-001",
             "line_number": 2,
             "reason": "主板未提供 BIOS 兼容性测试报告"
@@ -318,7 +318,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -332,7 +332,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -351,7 +351,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -365,7 +365,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 2,
         "username": "lead_wang",
@@ -378,11 +378,11 @@
       "comment": "验收通过，批次交付完成",
       "extra_data": {
         "approved_by": "lead_wang",
-        "approved_at": "2026-06-17T01:41:47.538854"
+        "approved_at": "2026-06-17T02:03:25.543942"
       }
     },
     {
-      "timestamp": "2026-06-16T17:41:47",
+      "timestamp": "2026-06-16T18:03:25",
       "actor": {
         "id": 2,
         "username": "lead_wang",
