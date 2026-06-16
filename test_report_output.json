@@ -1,9 +1,9 @@
 {
   "report_title": "交付批次验收报告",
-  "generated_at": "2026-06-17T03:48:25.614939",
+  "generated_at": "2026-06-17T04:07:41.661856",
   "batch_summary": {
-    "id": 83,
-    "batch_code": "BATCH-2026-Q2-FQ38D8",
+    "id": 108,
+    "batch_code": "BATCH-2026-Q2-ZY8VB3",
     "name": "2026年Q2服务器配件交付批次",
     "description": "包含主板、内存、硬盘、电源等服务器核心配件",
     "status": "archived",
@@ -12,8 +12,8 @@
       "username": "submitter_chen",
       "display_name": "陈交付"
     },
-    "created_at": "2026-06-16T19:48:24",
-    "archived_at": "2026-06-17T03:48:25.542378"
+    "created_at": "2026-06-16T20:07:40",
+    "archived_at": "2026-06-17T04:07:41.592998"
   },
   "validation_summary": {
     "total_rules": 9,
@@ -35,7 +35,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T19:48:25",
+      "imported_at": "2026-06-16T20:07:41",
       "item_count": 5,
       "validation_status": "passed",
       "validation_summary": {
@@ -135,7 +135,7 @@
         "username": "submitter_chen",
         "display_name": "陈交付"
       },
-      "imported_at": "2026-06-16T19:48:25",
+      "imported_at": "2026-06-16T20:07:41",
       "item_count": 7,
       "validation_status": "passed",
       "validation_summary": {
@@ -241,7 +241,7 @@
   ],
   "approval_workflow": [
     {
-      "timestamp": "2026-06-16T19:48:24",
+      "timestamp": "2026-06-16T20:07:40",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -255,7 +255,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T19:48:24",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -267,18 +267,18 @@
       "to_status": "draft",
       "comment": "导入预检查[CONFLICT]：计划 v1，条目 8，冲突 0，不可导入",
       "extra_data": {
-        "precheck_token": "ktOR2He2O8_wxSIEJHG2woIoyw7UKKad3wMYUVemckM",
+        "precheck_token": "H-0xAyVdGowoW15E6K8224ZLLEYI67siCWuiBgz8_x4",
         "action_type": "CONFLICT",
         "has_conflict": true,
         "conflict_types": [],
         "can_import": false,
         "item_count": 8,
         "content_hash": "b27c8bd7654fed06be77f0ea736065260a99470ec157756d6d807e3ed8acec7f",
-        "expires_at": "2026-06-16T20:18:24.968474"
+        "expires_at": "2026-06-16T20:37:41.014942"
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -290,18 +290,18 @@
       "to_status": "draft",
       "comment": "导入预检查[NEW_VERSION]：计划 v1，条目 5，冲突 0，可导入",
       "extra_data": {
-        "precheck_token": "nQuwXt-ZG4cB-xdnMLPRthUlRqPASaQjRWr8L_ZB6XI",
+        "precheck_token": "TCpmU2mPMjpJJmzY9CTcgPyb1NzobPvW8qPIeffFtJQ",
         "action_type": "NEW_VERSION",
         "has_conflict": false,
         "conflict_types": [],
         "can_import": true,
         "item_count": 5,
         "content_hash": "835b87b173a23caaa015ecd69a495ad16f26a25ea166f96464326afe0ddc9d09",
-        "expires_at": "2026-06-16T20:18:25.025751"
+        "expires_at": "2026-06-16T20:37:41.058556"
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -316,12 +316,12 @@
         "version_number": 1,
         "import_format": "csv",
         "item_count": 5,
-        "precheck_token": "nQuwXt-ZG4cB-xdnMLPRthUlRqPASaQjRWr8L_ZB6XI",
+        "precheck_token": "TCpmU2mPMjpJJmzY9CTcgPyb1NzobPvW8qPIeffFtJQ",
         "warnings": []
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -335,7 +335,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 3,
         "username": "reviewer_li",
@@ -350,13 +350,13 @@
         "rejection_count": 2,
         "rejections": [
           {
-            "id": 67,
+            "id": 87,
             "item_key": "ITEM-002",
             "line_number": 3,
             "reason": "内存条描述中未明确标注 ECC 校验支持"
           },
           {
-            "id": 68,
+            "id": 88,
             "item_key": "ITEM-001",
             "line_number": 2,
             "reason": "主板未提供 BIOS 兼容性测试报告"
@@ -365,7 +365,7 @@
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -379,7 +379,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -391,7 +391,7 @@
       "to_status": "repairing",
       "comment": "导入预检查[NEW_VERSION]：计划 v2，条目 7，冲突 1，可导入",
       "extra_data": {
-        "precheck_token": "dD2BbDRkOKYB85YLuQm7NkWpYYCWSWnFjBs2kAgYdjI",
+        "precheck_token": "99OHzbdTuA47mgooRmbUg9UMIqisjjCtLyVpfygTdKg",
         "action_type": "NEW_VERSION",
         "has_conflict": true,
         "conflict_types": [
@@ -400,11 +400,11 @@
         "can_import": true,
         "item_count": 7,
         "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d",
-        "expires_at": "2026-06-16T20:18:25.318824"
+        "expires_at": "2026-06-16T20:37:41.327971"
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -419,12 +419,12 @@
         "version_number": 2,
         "import_format": "csv",
         "item_count": 7,
-        "precheck_token": "dD2BbDRkOKYB85YLuQm7NkWpYYCWSWnFjBs2kAgYdjI",
+        "precheck_token": "99OHzbdTuA47mgooRmbUg9UMIqisjjCtLyVpfygTdKg",
         "warnings": []
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 5,
         "username": "submitter_chen",
@@ -438,7 +438,7 @@
       "extra_data": null
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 2,
         "username": "lead_wang",
@@ -451,11 +451,11 @@
       "comment": "验收通过，批次交付完成",
       "extra_data": {
         "approved_by": "lead_wang",
-        "approved_at": "2026-06-17T03:48:25.511781"
+        "approved_at": "2026-06-17T04:07:41.562920"
       }
     },
     {
-      "timestamp": "2026-06-16T19:48:25",
+      "timestamp": "2026-06-16T20:07:41",
       "actor": {
         "id": 2,
         "username": "lead_wang",

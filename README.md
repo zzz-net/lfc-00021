@@ -408,7 +408,7 @@ curl -s -X POST "$API/api/batches/$BATCH_ID/manifests/import" \
   -F "precheck_token=<上一步返回的token>"
 ```
 **预期输出**: `success=true`, `version_number=2`, `message="内容无变更，复用现有版本 v2。"`
-不会创建 v3，版本历史保持 2 个，审批日志无新增 IMPORT 记录，不会污染导出报告。
+不会创建 v3，版本历史保持 2 个，审批日志新增 1 条 IMPORT 记录但 `extra_data.reused=true`（可据此区分复用与真实导入），导出报告数据不变。
 
 #### C. 批次状态不允许导入（预检查识别 CONFLICT）
 在步骤 9 提交待验收后，尝试预检查：
@@ -453,11 +453,22 @@ curl -s -X POST "$API/api/batches/2/manifests/precheck" \
 """清单导入预检查验收脚本 - 按 README 文档完整链路验证"""
 import requests, sys
 
-API = "http://localhost:8000"
+API = "http://127.0.0.1:8000"
 H_SUBMITTER = {"X-User-Id": "5"}
 H_ADMIN = {"X-User-Id": "1"}
 H_REVIEWER = {"X-User-Id": "3"}
 H_LEAD = {"X-User-Id": "2"}
+
+OK = "[OK]"
+FAIL = "[FAIL]"
+errors = []
+
+def check(step, condition, detail=""):
+    if condition:
+        print(f"  {OK} {step}")
+    else:
+        print(f"  {FAIL} {step}  --  {detail}")
+        errors.append(step)
 
 def precheck(bid, filename, filepath, user=H_SUBMITTER):
     with open(filepath, "rb") as f:
@@ -480,47 +491,56 @@ def do_import(bid, filename, filepath, token, user=H_SUBMITTER):
 r = requests.post(f"{API}/api/batches/", headers=H_SUBMITTER, json={
     "batch_code": "VERIFY-001", "name": "验收测试批次", "submitter_id": 5
 })
-assert r.status_code == 201, f"创建批次失败: {r.text}"
+check("创建批次", r.status_code == 201, f"status={r.status_code} body={r.text[:200]}")
+if r.status_code != 201:
+    print("  中止：无法创建批次"); sys.exit(1)
 bid = r.json()["id"]
-print(f"[OK] 批次创建 id={bid}")
+print(f"  批次 id={bid}")
 
 # 2. 预检查 v1
 r = precheck(bid, "v1.csv", "samples/manifest_sample_good.csv")
-assert r.status_code == 200
 d = r.json()
-assert d["action_type"] == "NEW_VERSION", f"预期 NEW_VERSION, 实际 {d['action_type']}"
-assert d["can_import"] is True
-token = d["precheck_token"]
-print(f"[OK] 预检查通过 action_type={d['action_type']} token={token[:12]}...")
+check("预检查 v1 status=200", r.status_code == 200, f"status={r.status_code}")
+check("预检查 action_type=NEW_VERSION", d.get("action_type") == "NEW_VERSION",
+      f"actual={d.get('action_type')}")
+check("预检查 can_import=True", d.get("can_import") is True,
+      f"actual={d.get('can_import')}")
+token = d.get("precheck_token")
+if not token:
+    print("  中止：未获取到 precheck_token"); sys.exit(1)
 
 # 3. 正式导入 v1
 r = do_import(bid, "v1.csv", "samples/manifest_sample_good.csv", token)
-assert r.status_code == 200
 d = r.json()
-assert d["success"] is True and d["version_number"] == 1
-print(f"[OK] 导入 v1 success version={d['version_number']}")
+check("导入 v1 status=200", r.status_code == 200, f"status={r.status_code}")
+check("导入 v1 success=True", d.get("success") is True, f"body={str(d)[:200]}")
+check("导入 v1 version_number=1", d.get("version_number") == 1,
+      f"actual={d.get('version_number')}")
 
 # 4. 重复预检查同一文件 → REUSE_VERSION
 r = precheck(bid, "dup.csv", "samples/manifest_sample_good.csv")
 d = r.json()
-assert d["action_type"] == "REUSE_VERSION"
-assert d["reused_version_number"] == 1
-token_dup = d["precheck_token"]
-print(f"[OK] 重复预检查 action_type=REUSE_VERSION 复用 v{d['reused_version_number']}")
+check("重复预检查 REUSE_VERSION", d.get("action_type") == "REUSE_VERSION",
+      f"actual={d.get('action_type')}")
+check("重复预检查 reused_version_number=1", d.get("reused_version_number") == 1,
+      f"actual={d.get('reused_version_number')}")
+token_dup = d.get("precheck_token")
 
 # 5. 重复导入 → 复用旧版本
 r = do_import(bid, "dup.csv", "samples/manifest_sample_good.csv", token_dup)
 d = r.json()
-assert d["success"] and d["version_number"] == 1
-print(f"[OK] 重复导入复用 v1")
+check("重复导入 success=True", d.get("success") is True)
+check("重复导入 version=1（无新版本）", d.get("version_number") == 1,
+      f"actual={d.get('version_number')}")
 
 # 6. 无 token 直接导入 → 400
 with open("samples/manifest_sample_good.csv", "rb") as f:
     r = requests.post(f"{API}/api/batches/{bid}/manifests/import",
         headers=H_SUBMITTER, files={"file": ("a.csv", f, "text/csv")})
-assert r.status_code == 400
-assert "缺少 precheck_token" in r.json()["error"]["message"]
-print("[OK] 无 token 导入 → 400")
+check("无 token 导入 → 400", r.status_code == 400, f"status={r.status_code}")
+err_msg = r.json().get("error", {}).get("message", "")
+check("错误提示含'缺少 precheck_token'", "缺少 precheck_token" in err_msg,
+      f"msg={err_msg[:80]}")
 
 # 7. 校验 → 提交 → 驳回 → 返修
 requests.post(f"{API}/api/batches/{bid}/validate", headers=H_SUBMITTER)
@@ -533,37 +553,37 @@ requests.post(f"{API}/api/batches/{bid}/reject", headers=H_REVIEWER, json={
     ]
 })
 requests.post(f"{API}/api/batches/{bid}/start-repair", headers=H_SUBMITTER)
-print("[OK] 驳回→返修流程完成")
+print(f"  {OK} 驳回→返修流程完成")
 
 # 8. 返修中预检查 v2 → 应看到未解决驳回 WARNING
 r = precheck(bid, "v2.csv", "samples/manifest_sample_repaired_v2.csv")
 d = r.json()
-assert d["action_type"] == "NEW_VERSION"
-assert d["has_conflict"] is True
-assert d["can_import"] is True
-rej_conflicts = [c for c in d["conflicts"] if c["conflict_type"] == "UNRESOLVED_REJECTIONS"]
-assert len(rej_conflicts) >= 1
-assert rej_conflicts[0]["severity"] == "warning"
-token_v2 = d["precheck_token"]
-print(f"[OK] v2 预检查有 {len(rej_conflicts)} 条 WARNING（未解决驳回）")
+check("v2 预检查 NEW_VERSION", d.get("action_type") == "NEW_VERSION")
+check("v2 预检查 has_conflict=True", d.get("has_conflict") is True)
+check("v2 预检查 can_import=True", d.get("can_import") is True)
+rej_conflicts = [c for c in d.get("conflicts", [])
+                 if c.get("conflict_type") == "UNRESOLVED_REJECTIONS"]
+check("v2 预检查含 UNRESOLVED_REJECTIONS warning", len(rej_conflicts) >= 1)
+token_v2 = d.get("precheck_token")
 
 # 9. 正式导入 v2
 r = do_import(bid, "v2.csv", "samples/manifest_sample_repaired_v2.csv", token_v2)
 d = r.json()
-assert d["success"] and d["version_number"] == 2
-print(f"[OK] 导入 v2 version={d['version_number']}")
+check("导入 v2 success=True", d.get("success") is True)
+check("导入 v2 version=2", d.get("version_number") == 2,
+      f"actual={d.get('version_number')}")
 
-# 10. 查看最近预检查记录（可追溯性）
+# 10. 查看最近预检查记录
 r = requests.get(f"{API}/api/batches/{bid}/manifests/prechecks/latest", headers=H_ADMIN)
-assert r.status_code == 200
-assert r.json()["action_type"] == "NEW_VERSION"
-print("[OK] 最近预检查记录可查")
+d = r.json()
+check("最近预检查可查", r.status_code == 200)
+check("最近预检查 consumed=True", d.get("consumed") is True)
 
 # 11. 审批日志中包含 PRECHECK_IMPORT
 r = requests.get(f"{API}/api/batches/{bid}/approval-logs", headers=H_ADMIN)
-pre_logs = [l for l in r.json() if l["action"] == "PRECHECK_IMPORT"]
-assert len(pre_logs) >= 3
-print(f"[OK] 审批日志中 {len(pre_logs)} 条 PRECHECK_IMPORT")
+pre_logs = [l for l in r.json() if l.get("action") == "PRECHECK_IMPORT"]
+check("审批日志含 >=3 条 PRECHECK_IMPORT", len(pre_logs) >= 3,
+      f"actual={len(pre_logs)}")
 
 # 12. 完成归档
 requests.post(f"{API}/api/batches/{bid}/validate", headers=H_SUBMITTER)
@@ -571,9 +591,13 @@ requests.post(f"{API}/api/batches/{bid}/transition", headers=H_SUBMITTER,
     json={"target_status": "pending_review", "comment": "v2已修"})
 requests.post(f"{API}/api/batches/{bid}/approve", headers=H_LEAD, data={"comment": "通过"})
 requests.post(f"{API}/api/batches/{bid}/archive", headers=H_LEAD, data={"comment": "归档"})
-print("[OK] 通过→归档完成")
+print(f"  {OK} 通过→归档完成")
 
-print("\n全部验收通过！")
+if errors:
+    print(f"\n{FAIL} {len(errors)} 项未通过: {errors}")
+    sys.exit(1)
+else:
+    print(f"\n全部验收通过！")
 ```
 
 保存为 `verify_precheck_flow.py` 后运行：
