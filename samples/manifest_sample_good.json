@@ -1,0 +1,42 @@
+[
+  {
+    "item_id": "ITEM-001",
+    "item_name": "高性能服务器主板",
+    "quantity": 50,
+    "unit_price": 1299.00,
+    "total_amount": 64950.00,
+    "description": "企业级服务器专用主板"
+  },
+  {
+    "item_id": "ITEM-002",
+    "item_name": "16GB DDR4内存条",
+    "quantity": 200,
+    "unit_price": 299.50,
+    "total_amount": 59900.00,
+    "description": "服务器内存条"
+  },
+  {
+    "item_id": "ITEM-003",
+    "item_name": "1TB NVMe SSD",
+    "quantity": 100,
+    "unit_price": 699.00,
+    "total_amount": 69900.00,
+    "description": "高速固态硬盘"
+  },
+  {
+    "item_id": "ITEM-004",
+    "item_name": "80PLUS金牌电源",
+    "quantity": 30,
+    "unit_price": 599.00,
+    "total_amount": 17970.00,
+    "description": "650W台式机电源"
+  },
+  {
+    "item_id": "ITEM-005",
+    "item_name": "千兆交换机",
+    "quantity": 10,
+    "unit_price": 1299.00,
+    "total_amount": 12990.00,
+    "description": "24口企业级交换机"
+  }
+]

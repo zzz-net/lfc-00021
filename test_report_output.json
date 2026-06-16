@@ -1,0 +1,407 @@
+{
+  "report_title": "交付批次验收报告",
+  "generated_at": "2026-06-17T01:18:24.958092",
+  "batch_summary": {
+    "id": 1,
+    "batch_code": "BATCH-2026-Q2-001",
+    "name": "2026年Q2服务器配件交付批次",
+    "description": "包含主板、内存、硬盘、电源等服务器核心配件",
+    "status": "archived",
+    "submitter": {
+      "id": 5,
+      "username": "submitter_chen",
+      "display_name": "陈交付"
+    },
+    "created_at": "2026-06-16T17:18:24",
+    "archived_at": "2026-06-17T01:18:24.886915"
+  },
+  "validation_summary": {
+    "total_rules": 9,
+    "total_items": 7,
+    "total_checks": 63,
+    "passed": 63,
+    "failed": 0,
+    "warnings": 0,
+    "validation_passed": true,
+    "failed_items_count": 0,
+    "warning_items_count": 0
+  },
+  "version_history": [
+    {
+      "version": 1,
+      "import_format": "csv",
+      "imported_by": {
+        "id": 5,
+        "username": "submitter_chen",
+        "display_name": "陈交付"
+      },
+      "imported_at": "2026-06-16T17:18:24",
+      "item_count": 5,
+      "validation_status": "passed",
+      "validation_summary": {
+        "total_rules": 9,
+        "total_items": 5,
+        "total_checks": 45,
+        "passed": 45,
+        "failed": 0,
+        "warnings": 0,
+        "validation_passed": true,
+        "failed_items_count": 0,
+        "warning_items_count": 0
+      },
+      "items": [
+        {
+          "line_number": 2,
+          "item_key": "ITEM-001",
+          "data": {
+            "item_id": "ITEM-001",
+            "item_name": "高性能服务器主板",
+            "quantity": "50",
+            "unit_price": "1299.00",
+            "total_amount": "64950.00",
+            "description": "企业级服务器专用主板"
+          }
+        },
+        {
+          "line_number": 3,
+          "item_key": "ITEM-002",
+          "data": {
+            "item_id": "ITEM-002",
+            "item_name": "16GB DDR4内存条",
+            "quantity": "200",
+            "unit_price": "299.50",
+            "total_amount": "59900.00",
+            "description": "服务器内存条"
+          }
+        },
+        {
+          "line_number": 4,
+          "item_key": "ITEM-003",
+          "data": {
+            "item_id": "ITEM-003",
+            "item_name": "1TB NVMe SSD",
+            "quantity": "100",
+            "unit_price": "699.00",
+            "total_amount": "69900.00",
+            "description": "高速固态硬盘"
+          }
+        },
+        {
+          "line_number": 5,
+          "item_key": "ITEM-004",
+          "data": {
+            "item_id": "ITEM-004",
+            "item_name": "80PLUS金牌电源",
+            "quantity": "30",
+            "unit_price": "599.00",
+            "total_amount": "17970.00",
+            "description": "650W台式机电源"
+          }
+        },
+        {
+          "line_number": 6,
+          "item_key": "ITEM-005",
+          "data": {
+            "item_id": "ITEM-005",
+            "item_name": "千兆交换机",
+            "quantity": "10",
+            "unit_price": "1299.00",
+            "total_amount": "12990.00",
+            "description": "24口企业级交换机"
+          }
+        }
+      ],
+      "rejections_in_this_version": [
+        {
+          "item_key": "ITEM-002",
+          "line_number": 3,
+          "reason": "内存条描述中未明确标注 ECC 校验支持",
+          "resolved": true
+        },
+        {
+          "item_key": "ITEM-001",
+          "line_number": 2,
+          "reason": "主板未提供 BIOS 兼容性测试报告",
+          "resolved": true
+        }
+      ],
+      "validation_errors": []
+    },
+    {
+      "version": 2,
+      "import_format": "csv",
+      "imported_by": {
+        "id": 5,
+        "username": "submitter_chen",
+        "display_name": "陈交付"
+      },
+      "imported_at": "2026-06-16T17:18:24",
+      "item_count": 7,
+      "validation_status": "passed",
+      "validation_summary": {
+        "total_rules": 9,
+        "total_items": 7,
+        "total_checks": 63,
+        "passed": 63,
+        "failed": 0,
+        "warnings": 0,
+        "validation_passed": true,
+        "failed_items_count": 0,
+        "warning_items_count": 0
+      },
+      "items": [
+        {
+          "line_number": 2,
+          "item_key": "ITEM-001",
+          "data": {
+            "item_id": "ITEM-001",
+            "item_name": "高性能服务器主板 REV.B",
+            "quantity": "50",
+            "unit_price": "1299.00",
+            "total_amount": "64950.00",
+            "description": "企业级服务器专用主板 - 修复 BIOS 兼容性问题"
+          }
+        },
+        {
+          "line_number": 3,
+          "item_key": "ITEM-002",
+          "data": {
+            "item_id": "ITEM-002",
+            "item_name": "16GB DDR4内存条",
+            "quantity": "200",
+            "unit_price": "299.50",
+            "total_amount": "59900.00",
+            "description": "服务器内存条 - ECC校验"
+          }
+        },
+        {
+          "line_number": 4,
+          "item_key": "ITEM-006",
+          "data": {
+            "item_id": "ITEM-006",
+            "item_name": "企业级 RAID 卡",
+            "quantity": "25",
+            "unit_price": "1899.00",
+            "total_amount": "47475.00",
+            "description": "新增：支持 RAID 0/1/5/10"
+          }
+        },
+        {
+          "line_number": 5,
+          "item_key": "ITEM-003",
+          "data": {
+            "item_id": "ITEM-003",
+            "item_name": "1TB NVMe SSD",
+            "quantity": "100",
+            "unit_price": "699.00",
+            "total_amount": "69900.00",
+            "description": "高速固态硬盘 - 散热片升级"
+          }
+        },
+        {
+          "line_number": 6,
+          "item_key": "ITEM-004",
+          "data": {
+            "item_id": "ITEM-004",
+            "item_name": "80PLUS金牌电源",
+            "quantity": "30",
+            "unit_price": "599.00",
+            "total_amount": "17970.00",
+            "description": "650W台式机电源"
+          }
+        },
+        {
+          "line_number": 7,
+          "item_key": "ITEM-005",
+          "data": {
+            "item_id": "ITEM-005",
+            "item_name": "千兆交换机",
+            "quantity": "10",
+            "unit_price": "1299.00",
+            "total_amount": "12990.00",
+            "description": "24口企业级交换机"
+          }
+        },
+        {
+          "line_number": 8,
+          "item_key": "ITEM-007",
+          "data": {
+            "item_id": "ITEM-007",
+            "item_name": "光纤模块",
+            "quantity": "100",
+            "unit_price": "399.00",
+            "total_amount": "39900.00",
+            "description": "新增：万兆多模 SFP+"
+          }
+        }
+      ],
+      "rejections_in_this_version": [],
+      "validation_errors": []
+    }
+  ],
+  "approval_workflow": [
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "CREATE",
+      "from_status": null,
+      "to_status": "draft",
+      "comment": "创建批次: 2026年Q2服务器配件交付批次",
+      "extra_data": null
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "IMPORT_MANIFEST",
+      "from_status": "draft",
+      "to_status": "draft",
+      "comment": "导入清单 v1 (CSV), 共 5 条记录",
+      "extra_data": {
+        "version_number": 1,
+        "import_format": "csv",
+        "item_count": 5,
+        "warnings": []
+      }
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "STATUS_TRANSITION",
+      "from_status": "draft",
+      "to_status": "pending_review",
+      "comment": "清单已完成初检，请评审验收",
+      "extra_data": null
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 3,
+        "username": "reviewer_li",
+        "role": "reviewer",
+        "display_name": "李评审"
+      },
+      "action": "REJECT",
+      "from_status": "pending_review",
+      "to_status": "partially_rejected",
+      "comment": "发现 2 项问题，请返修后重新提交",
+      "extra_data": {
+        "rejection_count": 2,
+        "rejections": [
+          {
+            "id": 1,
+            "item_key": "ITEM-002",
+            "line_number": 3,
+            "reason": "内存条描述中未明确标注 ECC 校验支持"
+          },
+          {
+            "id": 2,
+            "item_key": "ITEM-001",
+            "line_number": 2,
+            "reason": "主板未提供 BIOS 兼容性测试报告"
+          }
+        ]
+      }
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "START_REPAIR",
+      "from_status": "partially_rejected",
+      "to_status": "repairing",
+      "comment": "开始返修，准备导入修订版清单",
+      "extra_data": null
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "IMPORT_MANIFEST",
+      "from_status": "draft",
+      "to_status": "draft",
+      "comment": "导入清单 v2 (CSV), 共 7 条记录",
+      "extra_data": {
+        "version_number": 2,
+        "import_format": "csv",
+        "item_count": 7,
+        "warnings": []
+      }
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 5,
+        "username": "submitter_chen",
+        "role": "submitter",
+        "display_name": "陈交付"
+      },
+      "action": "STATUS_TRANSITION",
+      "from_status": "draft",
+      "to_status": "pending_review",
+      "comment": "已修复 2 项驳回问题，新增 ITEM-006/ITEM-007，请重新验收",
+      "extra_data": null
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 2,
+        "username": "lead_wang",
+        "role": "lead",
+        "display_name": "王组长"
+      },
+      "action": "APPROVE",
+      "from_status": "pending_review",
+      "to_status": "approved",
+      "comment": "验收通过，批次交付完成",
+      "extra_data": {
+        "approved_by": "lead_wang",
+        "approved_at": "2026-06-17T01:18:24.849986"
+      }
+    },
+    {
+      "timestamp": "2026-06-16T17:18:24",
+      "actor": {
+        "id": 2,
+        "username": "lead_wang",
+        "role": "lead",
+        "display_name": "王组长"
+      },
+      "action": "ARCHIVE",
+      "from_status": "approved",
+      "to_status": "archived",
+      "comment": "批次已归档，交付流程完成",
+      "extra_data": {
+        "archived_by": "lead_wang"
+      }
+    }
+  ],
+  "conclusion": {
+    "validation_passed": true,
+    "total_rejections": 2,
+    "resolved_rejections": 2,
+    "final_status": "archived"
+  }
+}
