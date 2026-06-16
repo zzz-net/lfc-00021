@@ -1,28 +1,36 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, status as http_status
+from fastapi.responses import JSONResponse, StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import json
+import io
+import csv
+import hashlib
 
 from app.database import get_db
 from app.models import (
     User, DeliveryBatch, ManifestVersion, ManifestItem,
-    RejectionRecord, ApprovalLog, ValidationResult
+    RejectionRecord, ApprovalLog, ValidationResult, VersionDiffSnapshot
 )
 from app.schemas import (
     AcceptanceReportResponse, ApprovalLogResponse,
     BATCH_STATUS_APPROVED, BATCH_STATUS_ARCHIVED,
     ManifestVersionResponse,
     VersionDiffResponse, VersionDiffExportResponse,
-    VersionDiffMetadata, VersionDiffSummary,
-    ItemDiff, ItemDiffSummary, FieldChange,
-    RejectionInfo, ValidationChange, ImportInfo,
-    DIFF_ACTION_ADDED, DIFF_ACTION_REMOVED,
-    DIFF_ACTION_MODIFIED, DIFF_ACTION_UNCHANGED,
-    APPROVAL_LOG_ACTION_VIEW_DIFF, APPROVAL_LOG_ACTION_EXPORT_DIFF
+    VersionDiffSnapshotResponse, VersionDiffSnapshotDetailResponse,
+    SnapshotListResponse,
+    APPROVAL_LOG_ACTION_VIEW_DIFF, APPROVAL_LOG_ACTION_EXPORT_DIFF,
+    APPROVAL_LOG_ACTION_QUERY_SNAPSHOT, APPROVAL_LOG_ACTION_EXPORT_SNAPSHOT_CSV,
+    VALID_EXPORT_FORMATS, DEFAULT_EXPORT_FORMAT,
+    SNAPSHOT_DEFAULT_LIMIT, SNAPSHOT_MAX_LIMIT, VALID_SNAPSHOT_STATUSES
 )
 from app.dependencies import get_current_user, get_batch_or_404, require_lead, require_version_diff_access
+from app.diff_engine import (
+    calculate_version_diff, save_diff_snapshot,
+    get_snapshot_by_versions, get_latest_snapshot, list_snapshots,
+    snapshot_to_diff_response
+)
 
 router = APIRouter(prefix="/api", tags=["报告与历史查询"])
 
@@ -294,352 +302,31 @@ def export_acceptance_report(
         )
     else:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"Unsupported format '{format}'. Use 'json'."
         )
-
-
-def _get_user_info(db: Session, user_id: int) -> tuple:
-    user = db.query(User).filter(User.id == user_id).first()
-    if user:
-        return user.username, user.display_name
-    return "unknown", None
-
-
-def _build_import_info(db: Session, version: ManifestVersion) -> ImportInfo:
-    username, display_name = _get_user_info(db, version.imported_by)
-    return ImportInfo(
-        version_number=version.version_number,
-        imported_by_username=username,
-        imported_by_display_name=display_name,
-        imported_at=version.imported_at,
-        item_count=version.item_count,
-        import_format=version.import_format
-    )
-
-
-def _compare_fields(old_data: dict, new_data: dict) -> List[FieldChange]:
-    changes = []
-    all_fields = sorted(set(list(old_data.keys()) + list(new_data.keys())))
-    for field in all_fields:
-        old_val = old_data.get(field)
-        new_val = new_data.get(field)
-        if old_val != new_val:
-            if field not in old_data:
-                change_type = "added"
-            elif field not in new_data:
-                change_type = "removed"
-            else:
-                change_type = "modified"
-            changes.append(FieldChange(
-                field_name=field,
-                old_value=old_val,
-                new_value=new_val,
-                change_type=change_type
-            ))
-    return changes
-
-
-def _calculate_item_diffs(
-    old_items: List[ManifestItem],
-    new_items: List[ManifestItem]
-) -> tuple:
-    old_map = {item.item_key: item for item in old_items}
-    new_map = {item.item_key: item for item in new_items}
-
-    added = []
-    removed = []
-    modified = []
-    unchanged = []
-
-    all_keys = sorted(set(list(old_map.keys()) + list(new_map.keys())))
-
-    for key in all_keys:
-        old_item = old_map.get(key)
-        new_item = new_map.get(key)
-
-        if old_item is None:
-            added.append(ItemDiff(
-                item_key=key,
-                action=DIFF_ACTION_ADDED,
-                line_number_new=new_item.line_number,
-                new_data=new_item.item_data,
-                field_changes=[
-                    FieldChange(
-                        field_name=k,
-                        new_value=v,
-                        change_type="added"
-                    )
-                    for k, v in sorted(new_item.item_data.items())
-                ]
-            ))
-        elif new_item is None:
-            removed.append(ItemDiff(
-                item_key=key,
-                action=DIFF_ACTION_REMOVED,
-                line_number_old=old_item.line_number,
-                old_data=old_item.item_data,
-                field_changes=[
-                    FieldChange(
-                        field_name=k,
-                        old_value=v,
-                        change_type="removed"
-                    )
-                    for k, v in sorted(old_item.item_data.items())
-                ]
-            ))
-        else:
-            field_changes = _compare_fields(old_item.item_data, new_item.item_data)
-            if field_changes:
-                modified.append(ItemDiff(
-                    item_key=key,
-                    action=DIFF_ACTION_MODIFIED,
-                    line_number_old=old_item.line_number,
-                    line_number_new=new_item.line_number,
-                    old_data=old_item.item_data,
-                    new_data=new_item.item_data,
-                    field_changes=field_changes
-                ))
-            else:
-                unchanged.append(ItemDiffSummary(
-                    item_key=key,
-                    action=DIFF_ACTION_UNCHANGED,
-                    change_summary="内容无变更",
-                    changed_fields=[]
-                ))
-
-    return added, removed, modified, unchanged
-
-
-def _collect_unresolved_rejections(
-    db: Session,
-    batch_id: int,
-    old_version_id: int,
-    new_version_id: int
-) -> List[RejectionInfo]:
-    rejections = db.query(RejectionRecord).filter(
-        RejectionRecord.batch_id == batch_id,
-        RejectionRecord.resolved == False
-    ).order_by(RejectionRecord.created_at.asc()).all()
-
-    result = []
-    for r in rejections:
-        username, display_name = _get_user_info(db, r.rejector_id)
-        result.append(RejectionInfo(
-            id=r.id,
-            item_key=r.item_key,
-            line_number=r.line_number,
-            rejection_reason=r.rejection_reason,
-            rejector_username=username,
-            rejector_display_name=display_name,
-            created_at=r.created_at,
-            resolved=r.resolved,
-            resolved_at=r.resolved_at
-        ))
-    return result
-
-
-def _collect_validation_changes(
-    db: Session,
-    old_version_id: int,
-    new_version_id: int
-) -> List[ValidationChange]:
-    old_results = db.query(ValidationResult).filter(
-        ValidationResult.manifest_version_id == old_version_id
-    ).all()
-    new_results = db.query(ValidationResult).filter(
-        ValidationResult.manifest_version_id == new_version_id
-    ).all()
-
-    def key(r):
-        return (r.item_key or "", r.rule_code, r.field_name or "")
-
-    old_map = {key(r): r for r in old_results}
-    new_map = {key(r): r for r in new_results}
-
-    changes = []
-    all_keys = sorted(set(list(old_map.keys()) + list(new_map.keys())))
-
-    for k in all_keys:
-        old_r = old_map.get(k)
-        new_r = new_map.get(k)
-
-        if old_r is None:
-            if not new_r.passed:
-                changes.append(ValidationChange(
-                    item_key=new_r.item_key,
-                    field_name=new_r.field_name,
-                    rule_code=new_r.rule_code,
-                    new_severity=new_r.severity,
-                    new_passed=new_r.passed,
-                    new_message=new_r.message,
-                    change_type="new_violation"
-                ))
-        elif new_r is None:
-            if not old_r.passed:
-                changes.append(ValidationChange(
-                    item_key=old_r.item_key,
-                    field_name=old_r.field_name,
-                    rule_code=old_r.rule_code,
-                    old_severity=old_r.severity,
-                    old_passed=old_r.passed,
-                    old_message=old_r.message,
-                    change_type="resolved"
-                ))
-        else:
-            old_failed = not old_r.passed
-            new_failed = not new_r.passed
-            if old_failed and not new_failed:
-                changes.append(ValidationChange(
-                    item_key=new_r.item_key,
-                    field_name=new_r.field_name,
-                    rule_code=new_r.rule_code,
-                    old_severity=old_r.severity,
-                    new_severity=new_r.severity,
-                    old_passed=old_r.passed,
-                    new_passed=new_r.passed,
-                    old_message=old_r.message,
-                    new_message=new_r.message,
-                    change_type="resolved"
-                ))
-            elif not old_failed and new_failed:
-                changes.append(ValidationChange(
-                    item_key=new_r.item_key,
-                    field_name=new_r.field_name,
-                    rule_code=new_r.rule_code,
-                    old_severity=old_r.severity,
-                    new_severity=new_r.severity,
-                    old_passed=old_r.passed,
-                    new_passed=new_r.passed,
-                    old_message=old_r.message,
-                    new_message=new_r.message,
-                    change_type="new_violation"
-                ))
-            elif old_failed and new_failed and (
-                old_r.severity != new_r.severity or
-                old_r.message != new_r.message
-            ):
-                changes.append(ValidationChange(
-                    item_key=new_r.item_key,
-                    field_name=new_r.field_name,
-                    rule_code=new_r.rule_code,
-                    old_severity=old_r.severity,
-                    new_severity=new_r.severity,
-                    old_passed=old_r.passed,
-                    new_passed=new_r.passed,
-                    old_message=old_r.message,
-                    new_message=new_r.message,
-                    change_type="modified"
-                ))
-
-    return changes
-
-
-def _count_validation_issues(db: Session, version_id: int) -> tuple:
-    results = db.query(ValidationResult).filter(
-        ValidationResult.manifest_version_id == version_id
-    ).all()
-    errors = sum(1 for r in results if not r.passed and r.severity == "error")
-    warnings = sum(1 for r in results if not r.passed and r.severity == "warning")
-    return errors, warnings
-
-
-def _count_unresolved_rejections(db: Session, batch_id: int, version_id: int) -> int:
-    return db.query(RejectionRecord).filter(
-        RejectionRecord.batch_id == batch_id,
-        RejectionRecord.manifest_version_id == version_id,
-        RejectionRecord.resolved == False
-    ).count()
-
-
-def _calculate_version_diff(
-    db: Session,
-    batch: DeliveryBatch,
-    old_version: ManifestVersion,
-    new_version: ManifestVersion,
-    current_user: User
-) -> VersionDiffResponse:
-    old_items = sorted(old_version.items, key=lambda x: x.item_key)
-    new_items = sorted(new_version.items, key=lambda x: x.item_key)
-
-    added, removed, modified, unchanged = _calculate_item_diffs(old_items, new_items)
-
-    total_field_changes = sum(len(m.field_changes) for m in modified)
-    total_field_changes += sum(len(a.field_changes) for a in added)
-    total_field_changes += sum(len(r.field_changes) for r in removed)
-
-    unresolved_old = _count_unresolved_rejections(db, batch.id, old_version.id)
-    unresolved_new = _count_unresolved_rejections(db, batch.id, new_version.id)
-
-    val_errors_old, val_warnings_old = _count_validation_issues(db, old_version.id)
-    val_errors_new, val_warnings_new = _count_validation_issues(db, new_version.id)
-
-    unresolved_rejections = _collect_unresolved_rejections(
-        db, batch.id, old_version.id, new_version.id
-    )
-    validation_changes = _collect_validation_changes(db, old_version.id, new_version.id)
-
-    username, display_name = _get_user_info(db, current_user.id)
-
-    metadata = VersionDiffMetadata(
-        batch_id=batch.id,
-        batch_code=batch.batch_code,
-        batch_name=batch.name,
-        old_version=old_version.version_number,
-        new_version=new_version.version_number,
-        old_import=_build_import_info(db, old_version),
-        new_import=_build_import_info(db, new_version),
-        generated_at=datetime.now(),
-        generated_by_username=username,
-        generated_by_display_name=display_name
-    )
-
-    summary = VersionDiffSummary(
-        total_items_old=len(old_items),
-        total_items_new=len(new_items),
-        added_count=len(added),
-        removed_count=len(removed),
-        modified_count=len(modified),
-        unchanged_count=len(unchanged),
-        field_change_count=total_field_changes,
-        unresolved_rejections_old=unresolved_old,
-        unresolved_rejections_new=unresolved_new,
-        validation_errors_old=val_errors_old,
-        validation_errors_new=val_errors_new,
-        validation_warnings_old=val_warnings_old,
-        validation_warnings_new=val_warnings_new
-    )
-
-    return VersionDiffResponse(
-        metadata=metadata,
-        summary=summary,
-        added_items=added,
-        removed_items=removed,
-        modified_items=modified,
-        unchanged_items=unchanged,
-        unresolved_rejections=unresolved_rejections,
-        validation_changes=validation_changes
-    )
 
 
 def _log_diff_action(
     db: Session,
     batch_id: int,
-    old_version_id: int,
-    new_version_id: int,
+    old_version_number: int,
+    new_version_number: int,
     actor_id: int,
     action: str,
     extra_data: dict = None
 ):
     log = ApprovalLog(
         batch_id=batch_id,
-        manifest_version_id=new_version_id,
+        manifest_version_id=None,
         actor_id=actor_id,
         action=action,
         from_status=None,
         to_status=None,
-        comment=f"查看版本差异: v{old_version_id} -> v{new_version_id}" if action == APPROVAL_LOG_ACTION_VIEW_DIFF
-                else f"导出版本差异: v{old_version_id} -> v{new_version_id}",
+        comment=f"查看版本差异: v{old_version_number} -> v{new_version_number}" if action == APPROVAL_LOG_ACTION_VIEW_DIFF
+                else (f"导出版本差异: v{old_version_number} -> v{new_version_number}" if action == APPROVAL_LOG_ACTION_EXPORT_DIFF
+                      else (f"查询版本差异快照: v{old_version_number} -> v{new_version_number}" if action == APPROVAL_LOG_ACTION_QUERY_SNAPSHOT
+                            else f"CSV导出版本差异: v{old_version_number} -> v{new_version_number}")),
         extra_data=extra_data or {}
     )
     db.add(log)
@@ -658,7 +345,7 @@ def _get_versions_for_diff(
 
     if len(versions) < 2:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=http_status.HTTP_400_BAD_REQUEST,
             detail=f"该批次仅有 {len(versions)} 个版本，至少需要 2 个版本才能进行对比。"
                    f" 请先导入新清单创建新版本。"
         )
@@ -669,7 +356,7 @@ def _get_versions_for_diff(
         new_version = next((v for v in versions if v.version_number == new_version_number), None)
         if not new_version:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"新版本号 v{new_version_number} 不存在"
             )
 
@@ -682,7 +369,7 @@ def _get_versions_for_diff(
         old_version = next((v for v in versions if v.version_number == old_version_number), None)
         if not old_version:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=http_status.HTTP_404_NOT_FOUND,
                 detail=f"旧版本号 v{old_version_number} 不存在"
             )
 
@@ -690,6 +377,48 @@ def _get_versions_for_diff(
         old_version, new_version = new_version, old_version
 
     return old_version, new_version
+
+
+def _snapshot_to_list_response(snap: VersionDiffSnapshot) -> dict:
+    summary = snap.summary_json or {}
+    return {
+        "id": snap.id,
+        "batch_id": snap.batch_id,
+        "old_version_id": snap.old_version_id,
+        "new_version_id": snap.new_version_id,
+        "old_version_number": snap.old_version_number,
+        "new_version_number": snap.new_version_number,
+        "snapshot_key": snap.snapshot_key,
+        "status": snap.status,
+        "created_by": snap.created_by,
+        "created_at": snap.created_at,
+        "invalidated_at": snap.invalidated_at,
+        "invalidated_by": snap.invalidated_by,
+        "content_hash": snap.content_hash,
+        "metadata": snap.metadata_json or {},
+        "summary": summary,
+        "has_added": summary.get("added_count", 0) > 0,
+        "has_removed": summary.get("removed_count", 0) > 0,
+        "has_modified": summary.get("modified_count", 0) > 0,
+        "has_unresolved_rejections": summary.get("unresolved_rejections_new", 0) > 0,
+        "has_validation_changes": len(snap.validation_changes_json or []) > 0,
+    }
+
+
+def _get_or_compute_diff(
+    db: Session,
+    batch: DeliveryBatch,
+    old_version: ManifestVersion,
+    new_version: ManifestVersion,
+    current_user: User
+) -> tuple:
+    snapshot = get_snapshot_by_versions(
+        db, batch.id, old_version.version_number, new_version.version_number
+    )
+    if snapshot:
+        return snapshot_to_diff_response(snapshot), True, snapshot
+    diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
+    return diff, False, None
 
 
 @router.get("/batches/{batch_id}/version-diff", response_model=VersionDiffResponse)
@@ -704,22 +433,306 @@ def get_version_diff(
 
     old_ver, new_ver = _get_versions_for_diff(db, batch_id, old_version, new_version)
 
-    diff_result = _calculate_version_diff(db, batch, old_ver, new_ver, current_user)
+    diff_result, from_snapshot, snap = _get_or_compute_diff(db, batch, old_ver, new_ver, current_user)
+
+    extra = {
+        "old_version": old_ver.version_number,
+        "new_version": new_ver.version_number,
+        "from_snapshot": from_snapshot,
+    }
+    if snap:
+        extra["snapshot_id"] = snap.id
+        extra["snapshot_key"] = snap.snapshot_key
 
     _log_diff_action(
         db=db,
         batch_id=batch_id,
-        old_version_id=old_ver.version_number,
-        new_version_id=new_ver.version_number,
+        old_version_number=old_ver.version_number,
+        new_version_number=new_ver.version_number,
         actor_id=current_user.id,
         action=APPROVAL_LOG_ACTION_VIEW_DIFF,
-        extra_data={
-            "old_version": old_ver.version_number,
-            "new_version": new_ver.version_number
-        }
+        extra_data=extra
     )
 
     return diff_result
+
+
+@router.get("/batches/{batch_id}/snapshots", response_model=SnapshotListResponse)
+def list_version_diff_snapshots(
+    batch_id: int,
+    status: Optional[str] = None,
+    limit: int = SNAPSHOT_DEFAULT_LIMIT,
+    offset: int = 0,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_version_diff_access)
+):
+    batch = get_batch_or_404(db, batch_id)
+
+    if status and status not in VALID_SNAPSHOT_STATUSES:
+        raise HTTPException(
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid status '{status}'. Valid statuses: {VALID_SNAPSHOT_STATUSES}"
+        )
+
+    limit = max(1, min(limit, SNAPSHOT_MAX_LIMIT))
+    offset = max(0, offset)
+
+    snapshots, total = list_snapshots(db, batch_id, status, limit, offset)
+
+    log = ApprovalLog(
+        batch_id=batch_id,
+        actor_id=current_user.id,
+        action=APPROVAL_LOG_ACTION_QUERY_SNAPSHOT,
+        comment=f"列出版本差异快照: {total} 条, offset={offset}, limit={limit}",
+        extra_data={
+            "status_filter": status,
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+        }
+    )
+    db.add(log)
+    db.commit()
+
+    return SnapshotListResponse(
+        batch_id=batch.id,
+        batch_code=batch.batch_code,
+        total=total,
+        snapshots=[_snapshot_to_list_response(s) for s in snapshots]
+    )
+
+
+@router.get("/batches/{batch_id}/snapshots/latest", response_model=VersionDiffSnapshotDetailResponse)
+def get_latest_version_diff_snapshot(
+    batch_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_version_diff_access)
+):
+    batch = get_batch_or_404(db, batch_id)
+
+    snap = get_latest_snapshot(db, batch_id)
+    if not snap:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail="该批次尚无有效版本差异快照。请先导入至少两个版本的清单。"
+        )
+
+    diff = snapshot_to_diff_response(snap)
+
+    log = ApprovalLog(
+        batch_id=batch_id,
+        actor_id=current_user.id,
+        action=APPROVAL_LOG_ACTION_QUERY_SNAPSHOT,
+        comment=f"查询最新版本差异快照: v{snap.old_version_number} -> v{snap.new_version_number}",
+        extra_data={
+            "snapshot_id": snap.id,
+            "snapshot_key": snap.snapshot_key,
+            "old_version": snap.old_version_number,
+            "new_version": snap.new_version_number,
+        }
+    )
+    db.add(log)
+    db.commit()
+
+    base = _snapshot_to_list_response(snap)
+    return VersionDiffSnapshotDetailResponse(
+        **base,
+        added_items=diff.added_items,
+        removed_items=diff.removed_items,
+        modified_items=diff.modified_items,
+        unchanged_items=diff.unchanged_items,
+        unresolved_rejections=diff.unresolved_rejections,
+        validation_changes=diff.validation_changes,
+    )
+
+
+@router.get("/batches/{batch_id}/snapshots/by-versions", response_model=VersionDiffSnapshotDetailResponse)
+def get_snapshot_by_version_pair(
+    batch_id: int,
+    old_version: int,
+    new_version: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_version_diff_access)
+):
+    batch = get_batch_or_404(db, batch_id)
+
+    snap = get_snapshot_by_versions(db, batch_id, old_version, new_version)
+    if not snap:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"未找到 v{old_version} -> v{new_version} 的有效快照。"
+        )
+
+    diff = snapshot_to_diff_response(snap)
+
+    log = ApprovalLog(
+        batch_id=batch_id,
+        actor_id=current_user.id,
+        action=APPROVAL_LOG_ACTION_QUERY_SNAPSHOT,
+        comment=f"按版本查询快照: v{old_version} -> v{new_version}",
+        extra_data={
+            "snapshot_id": snap.id,
+            "snapshot_key": snap.snapshot_key,
+            "old_version": old_version,
+            "new_version": new_version,
+        }
+    )
+    db.add(log)
+    db.commit()
+
+    base = _snapshot_to_list_response(snap)
+    return VersionDiffSnapshotDetailResponse(
+        **base,
+        added_items=diff.added_items,
+        removed_items=diff.removed_items,
+        modified_items=diff.modified_items,
+        unchanged_items=diff.unchanged_items,
+        unresolved_rejections=diff.unresolved_rejections,
+        validation_changes=diff.validation_changes,
+    )
+
+
+@router.get("/batches/{batch_id}/snapshots/{snapshot_id}", response_model=VersionDiffSnapshotDetailResponse)
+def get_snapshot_by_id(
+    batch_id: int,
+    snapshot_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_version_diff_access)
+):
+    get_batch_or_404(db, batch_id)
+
+    snap = db.query(VersionDiffSnapshot).filter(
+        VersionDiffSnapshot.id == snapshot_id,
+        VersionDiffSnapshot.batch_id == batch_id
+    ).first()
+    if not snap:
+        raise HTTPException(
+            status_code=http_status.HTTP_404_NOT_FOUND,
+            detail=f"快照 ID {snapshot_id} 不存在或不属于该批次"
+        )
+
+    diff = snapshot_to_diff_response(snap)
+
+    log = ApprovalLog(
+        batch_id=batch_id,
+        actor_id=current_user.id,
+        action=APPROVAL_LOG_ACTION_QUERY_SNAPSHOT,
+        comment=f"按ID查询快照: {snapshot_id}",
+        extra_data={
+            "snapshot_id": snap.id,
+            "snapshot_key": snap.snapshot_key,
+            "old_version": snap.old_version_number,
+            "new_version": snap.new_version_number,
+        }
+    )
+    db.add(log)
+    db.commit()
+
+    base = _snapshot_to_list_response(snap)
+    return VersionDiffSnapshotDetailResponse(
+        **base,
+        added_items=diff.added_items,
+        removed_items=diff.removed_items,
+        modified_items=diff.modified_items,
+        unchanged_items=diff.unchanged_items,
+        unresolved_rejections=diff.unresolved_rejections,
+        validation_changes=diff.validation_changes,
+    )
+
+
+def _build_diff_csv_rows(diff: VersionDiffResponse) -> List[List[str]]:
+    rows = []
+    header = [
+        "change_category",
+        "item_key",
+        "action",
+        "field_name",
+        "old_value",
+        "new_value",
+        "change_type",
+        "line_number_old",
+        "line_number_new",
+    ]
+    rows.append(header)
+
+    for item in diff.added_items:
+        for fc in item.field_changes:
+            rows.append([
+                "item_added",
+                item.item_key,
+                item.action,
+                fc.field_name,
+                "" if fc.old_value is None else str(fc.old_value),
+                "" if fc.new_value is None else str(fc.new_value),
+                fc.change_type,
+                "" if item.line_number_old is None else str(item.line_number_old),
+                "" if item.line_number_new is None else str(item.line_number_new),
+            ])
+
+    for item in diff.removed_items:
+        for fc in item.field_changes:
+            rows.append([
+                "item_removed",
+                item.item_key,
+                item.action,
+                fc.field_name,
+                "" if fc.old_value is None else str(fc.old_value),
+                "" if fc.new_value is None else str(fc.new_value),
+                fc.change_type,
+                "" if item.line_number_old is None else str(item.line_number_old),
+                "" if item.line_number_new is None else str(item.line_number_new),
+            ])
+
+    for item in diff.modified_items:
+        for fc in item.field_changes:
+            rows.append([
+                "item_modified",
+                item.item_key,
+                item.action,
+                fc.field_name,
+                "" if fc.old_value is None else str(fc.old_value),
+                "" if fc.new_value is None else str(fc.new_value),
+                fc.change_type,
+                "" if item.line_number_old is None else str(item.line_number_old),
+                "" if item.line_number_new is None else str(item.line_number_new),
+            ])
+
+    for r in diff.unresolved_rejections:
+        rows.append([
+            "unresolved_rejection",
+            r.item_key or "",
+            "rejection",
+            "",
+            "",
+            r.rejection_reason,
+            "rejection",
+            "" if r.line_number is None else str(r.line_number),
+            "",
+        ])
+
+    for vc in diff.validation_changes:
+        rows.append([
+            "validation_change",
+            vc.item_key or "",
+            vc.change_type,
+            vc.field_name or "",
+            (vc.old_message or "") if vc.old_passed is False else "",
+            (vc.new_message or "") if vc.new_passed is False else "",
+            vc.change_type,
+            "",
+            "",
+        ])
+
+    return rows
+
+
+def _stream_csv(rows: List[List[str]]) -> io.StringIO:
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    for row in rows:
+        writer.writerow(row)
+    buffer.seek(0)
+    return buffer
 
 
 @router.get("/batches/{batch_id}/version-diff/export")
@@ -727,60 +740,78 @@ def export_version_diff(
     batch_id: int,
     old_version: Optional[int] = None,
     new_version: Optional[int] = None,
-    format: str = "json",
+    format: str = DEFAULT_EXPORT_FORMAT,
     db: Session = Depends(get_db),
     current_user: User = Depends(require_version_diff_access)
 ):
     batch = get_batch_or_404(db, batch_id)
 
-    if format.lower() != "json":
+    format_lower = format.lower()
+    if format_lower not in VALID_EXPORT_FORMATS:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Unsupported format '{format}'. Use 'json'."
+            status_code=http_status.HTTP_400_BAD_REQUEST,
+            detail=f"Unsupported format '{format}'. Valid formats: {VALID_EXPORT_FORMATS}"
         )
 
     old_ver, new_ver = _get_versions_for_diff(db, batch_id, old_version, new_version)
 
-    diff_result = _calculate_version_diff(db, batch, old_ver, new_ver, current_user)
+    diff_result, from_snapshot, snap = _get_or_compute_diff(db, batch, old_ver, new_ver, current_user)
 
-    import hashlib
     export_id_parts = [
         str(batch_id),
         str(old_ver.version_number),
         str(new_ver.version_number),
         str(old_ver.id),
         str(new_ver.id),
-        str(batch.batch_code)
+        str(batch.batch_code),
+        format_lower,
     ]
     export_id = hashlib.sha256("|".join(export_id_parts).encode()).hexdigest()[:16]
 
-    export_response = VersionDiffExportResponse(
-        export_id=export_id,
-        export_timestamp=datetime.now(),
-        exported_by=current_user.username,
-        diff_data=diff_result
-    )
+    extra = {
+        "old_version": old_ver.version_number,
+        "new_version": new_ver.version_number,
+        "export_id": export_id,
+        "format": format_lower,
+        "from_snapshot": from_snapshot,
+    }
+    if snap:
+        extra["snapshot_id"] = snap.id
+        extra["snapshot_key"] = snap.snapshot_key
 
+    action_type = APPROVAL_LOG_ACTION_EXPORT_SNAPSHOT_CSV if format_lower == "csv" else APPROVAL_LOG_ACTION_EXPORT_DIFF
     _log_diff_action(
         db=db,
         batch_id=batch_id,
-        old_version_id=old_ver.version_number,
-        new_version_id=new_ver.version_number,
+        old_version_number=old_ver.version_number,
+        new_version_number=new_ver.version_number,
         actor_id=current_user.id,
-        action=APPROVAL_LOG_ACTION_EXPORT_DIFF,
-        extra_data={
-            "old_version": old_ver.version_number,
-            "new_version": new_ver.version_number,
-            "export_id": export_id,
-            "format": format
-        }
+        action=action_type,
+        extra_data=extra
     )
 
-    filename = f"version_diff_{batch.batch_code}_v{old_ver.version_number}_to_v{new_ver.version_number}.json"
-
-    return JSONResponse(
-        content=json.loads(export_response.model_dump_json()),
-        headers={
-            "Content-Disposition": f'attachment; filename="{filename}"'
-        }
-    )
+    if format_lower == "json":
+        export_response = VersionDiffExportResponse(
+            export_id=export_id,
+            export_timestamp=datetime.now(),
+            exported_by=current_user.username,
+            diff_data=diff_result
+        )
+        filename = f"version_diff_{batch.batch_code}_v{old_ver.version_number}_to_v{new_ver.version_number}.json"
+        return JSONResponse(
+            content=json.loads(export_response.model_dump_json()),
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    else:
+        rows = _build_diff_csv_rows(diff_result)
+        buffer = _stream_csv(rows)
+        filename = f"version_diff_{batch.batch_code}_v{old_ver.version_number}_to_v{new_ver.version_number}.csv"
+        return StreamingResponse(
+            iter([buffer.getvalue()]),
+            media_type="text/csv; charset=utf-8",
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )

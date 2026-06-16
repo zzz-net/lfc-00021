@@ -182,3 +182,42 @@ class ApprovalLog(Base):
 
     batch = relationship("DeliveryBatch", back_populates="approval_logs")
     actor = relationship("User", back_populates="approval_logs")
+
+
+SNAPSHOT_VALID = "valid"
+SNAPSHOT_INVALID = "invalid"
+SNAPSHOT_SUPERSEDED = "superseded"
+
+
+class VersionDiffSnapshot(Base):
+    __tablename__ = "version_diff_snapshots"
+
+    id = Column(Integer, primary_key=True, index=True)
+    batch_id = Column(Integer, ForeignKey("delivery_batches.id"), nullable=False, index=True)
+    old_version_id = Column(Integer, ForeignKey("manifest_versions.id"), nullable=False, index=True)
+    new_version_id = Column(Integer, ForeignKey("manifest_versions.id"), nullable=False, index=True)
+    old_version_number = Column(Integer, nullable=False)
+    new_version_number = Column(Integer, nullable=False)
+    snapshot_key = Column(String(128), unique=True, nullable=False, index=True)
+    status = Column(String(20), nullable=False, default=SNAPSHOT_VALID)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    invalidated_at = Column(DateTime(timezone=True), nullable=True)
+    invalidated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+
+    metadata_json = Column(JSON, nullable=False)
+    summary_json = Column(JSON, nullable=False)
+    added_items_json = Column(JSON, nullable=False, default=list)
+    removed_items_json = Column(JSON, nullable=False, default=list)
+    modified_items_json = Column(JSON, nullable=False, default=list)
+    unchanged_items_json = Column(JSON, nullable=False, default=list)
+    unresolved_rejections_json = Column(JSON, nullable=False, default=list)
+    validation_changes_json = Column(JSON, nullable=False, default=list)
+
+    content_hash = Column(String(64), nullable=False)
+
+    batch = relationship("DeliveryBatch", foreign_keys=[batch_id])
+    old_version = relationship("ManifestVersion", foreign_keys=[old_version_id])
+    new_version = relationship("ManifestVersion", foreign_keys=[new_version_id])
+    creator = relationship("User", foreign_keys=[created_by])
+    invalidator = relationship("User", foreign_keys=[invalidated_by])

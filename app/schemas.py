@@ -445,3 +445,60 @@ class VersionDiffExportResponse(BaseModel):
     export_timestamp: datetime
     exported_by: str
     diff_data: VersionDiffResponse
+
+
+SNAPSHOT_VALID = "valid"
+SNAPSHOT_INVALID = "invalid"
+SNAPSHOT_SUPERSEDED = "superseded"
+VALID_SNAPSHOT_STATUSES = [SNAPSHOT_VALID, SNAPSHOT_INVALID, SNAPSHOT_SUPERSEDED]
+
+APPROVAL_LOG_ACTION_CREATE_SNAPSHOT = "CREATE_DIFF_SNAPSHOT"
+APPROVAL_LOG_ACTION_QUERY_SNAPSHOT = "QUERY_DIFF_SNAPSHOT"
+APPROVAL_LOG_ACTION_EXPORT_SNAPSHOT_CSV = "EXPORT_DIFF_SNAPSHOT_CSV"
+
+DEFAULT_EXPORT_FORMAT = "json"
+VALID_EXPORT_FORMATS = ["json", "csv"]
+SNAPSHOT_DEFAULT_LIMIT = 50
+SNAPSHOT_MAX_LIMIT = 200
+
+
+class VersionDiffSnapshotResponse(BaseModel):
+    id: int
+    batch_id: int
+    old_version_id: int
+    new_version_id: int
+    old_version_number: int
+    new_version_number: int
+    snapshot_key: str
+    status: str
+    created_by: int
+    created_at: datetime
+    invalidated_at: Optional[datetime] = None
+    invalidated_by: Optional[int] = None
+    content_hash: str
+    metadata: Dict[str, Any]
+    summary: Dict[str, Any]
+    has_added: bool
+    has_removed: bool
+    has_modified: bool
+    has_unresolved_rejections: bool
+    has_validation_changes: bool
+
+    class Config:
+        from_attributes = True
+
+
+class VersionDiffSnapshotDetailResponse(VersionDiffSnapshotResponse):
+    added_items: List[ItemDiff] = []
+    removed_items: List[ItemDiff] = []
+    modified_items: List[ItemDiff] = []
+    unchanged_items: List[ItemDiffSummary] = []
+    unresolved_rejections: List[RejectionInfo] = []
+    validation_changes: List[ValidationChange] = []
+
+
+class SnapshotListResponse(BaseModel):
+    batch_id: int
+    batch_code: str
+    total: int
+    snapshots: List[VersionDiffSnapshotResponse] = []

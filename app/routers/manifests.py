@@ -23,10 +23,12 @@ from app.schemas import (
     ROLE_SUBMITTER,
     ImportPrecheckResponse, PrecheckConflictDetail,
     ImportPrecheckQueryResponse,
+    APPROVAL_LOG_ACTION_CREATE_SNAPSHOT
 )
 from app.dependencies import (
     get_current_user, require_submitter_or_admin, get_batch_or_404
 )
+from app.diff_engine import calculate_version_diff, save_diff_snapshot
 
 router = APIRouter(prefix="/api/batches", tags=["清单管理"])
 
@@ -797,6 +799,8 @@ async def import_manifest(
             )
             db.add(log)
 
+    old_version_id_before_import = batch.current_manifest_version_id
+
     manifest_version, is_new, version_number, item_count = _do_import_write(
         db=db,
         batch=batch,
@@ -810,6 +814,34 @@ async def import_manifest(
     precheck.consumed = True
     precheck.consumed_at = _utcnow().replace(tzinfo=None)
 
+    snapshot_id = None
+    if is_new and old_version_id_before_import:
+        old_version = db.query(ManifestVersion).filter(
+            ManifestVersion.id == old_version_id_before_import
+        ).first()
+        if old_version:
+            diff = calculate_version_diff(db, batch, old_version, manifest_version, current_user)
+            snapshot = save_diff_snapshot(db, batch, old_version, manifest_version, diff, current_user)
+            snapshot_id = snapshot.id
+
+            snap_log = ApprovalLog(
+                batch_id=batch.id,
+                manifest_version_id=manifest_version.id,
+                actor_id=current_user.id,
+                action=APPROVAL_LOG_ACTION_CREATE_SNAPSHOT,
+                from_status=batch.status,
+                to_status=batch.status,
+                comment=f"自动创建版本差异快照: v{old_version.version_number} -> v{version_number}",
+                extra_data={
+                    "snapshot_id": snapshot.id,
+                    "snapshot_key": snapshot.snapshot_key,
+                    "old_version": old_version.version_number,
+                    "new_version": version_number,
+                    "content_hash": snapshot.content_hash,
+                }
+            )
+            db.add(snap_log)
+
     if is_new:
         log_comment = f"导入清单 v{version_number} ({detected_format.upper()}), 共 {item_count} 条记录"
         extra = {
@@ -817,7 +849,8 @@ async def import_manifest(
             "import_format": detected_format,
             "item_count": item_count,
             "precheck_token": precheck.precheck_token,
-            "warnings": [e.model_dump() for e in parse_errors if e not in critical_errors]
+            "warnings": [e.model_dump() for e in parse_errors if e not in critical_errors],
+            "snapshot_id": snapshot_id,
         }
     else:
         log_comment = f"清单内容无变更，复用现有版本 v{version_number} ({detected_format.upper()})"
