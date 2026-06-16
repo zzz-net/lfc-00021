@@ -263,3 +263,69 @@ class AcceptanceReportResponse(BaseModel):
     approval_logs: List[ApprovalLogResponse]
     rejection_history: List[RejectionRecordResponse]
     generated_at: datetime
+
+
+PRECHECK_ACTION_NEW_VERSION = "NEW_VERSION"
+PRECHECK_ACTION_REUSE_VERSION = "REUSE_VERSION"
+PRECHECK_ACTION_CONFLICT = "CONFLICT"
+
+PRECHECK_CONFLICT_STATUS = "STATUS_CONFLICT"
+PRECHECK_CONFLICT_UNRESOLVED_REJECTIONS = "UNRESOLVED_REJECTIONS"
+
+
+class PrecheckConflictDetail(BaseModel):
+    conflict_type: str
+    severity: str = "error"
+    title: str
+    description: str
+    suggestion: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
+
+
+class ImportPrecheckResponse(BaseModel):
+    success: bool
+    precheck_token: Optional[str] = None
+    batch_id: int
+    action_type: str
+    has_conflict: bool
+    import_format: str
+    item_count: int
+    content_hash: str
+    planned_version_number: Optional[int] = None
+    reused_version_id: Optional[int] = None
+    reused_version_number: Optional[int] = None
+    conflicts: List[PrecheckConflictDetail] = []
+    batch_status: str
+    can_import: bool
+    expires_at: Optional[datetime] = None
+    reasons: List[str] = []
+    message: str
+    parse_errors: List[ImportValidationError] = []
+
+
+class ImportPrecheckQueryResponse(BaseModel):
+    id: int
+    batch_id: int
+    actor_id: int
+    precheck_token: str
+    content_hash: str
+    import_format: str
+    item_count: int
+    action_type: str
+    has_conflict: bool
+    conflict_types: Optional[List[str]] = None
+    conflict_details: Optional[List[Dict[str, Any]]] = None
+    reused_version_id: Optional[int] = None
+    reused_version_number: Optional[int] = None
+    planned_version_number: Optional[int] = None
+    created_at: datetime
+    expires_at: datetime
+    consumed: bool
+    consumed_at: Optional[datetime] = None
+    can_import: bool
+    reasons: List[str] = []
+    batch_status: Optional[str] = None
+
+
+class ConfirmImportRequest(BaseModel):
+    precheck_token: str = Field(..., max_length=64)

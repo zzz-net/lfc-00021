@@ -1,0 +1,4 @@
+item_id,item_name,quantity,unit_price
+ITEM-900,Reviewer CPU,2,800
+ITEM-901,Reviewer RAM,4,120
+ITEM-902,Reviewer SSD,1,500

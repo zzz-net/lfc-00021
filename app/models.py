@@ -4,6 +4,43 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
+PRECHECK_ACTION_NEW_VERSION = "NEW_VERSION"
+PRECHECK_ACTION_REUSE_VERSION = "REUSE_VERSION"
+PRECHECK_ACTION_CONFLICT = "CONFLICT"
+
+PRECHECK_CONFLICT_STATUS = "STATUS_CONFLICT"
+PRECHECK_CONFLICT_UNRESOLVED_REJECTIONS = "UNRESOLVED_REJECTIONS"
+
+PRECHECK_TOKEN_TTL_SECONDS = 1800
+
+
+class ImportPrecheck(Base):
+    __tablename__ = "import_prechecks"
+
+    id = Column(Integer, primary_key=True, index=True)
+    batch_id = Column(Integer, ForeignKey("delivery_batches.id"), nullable=False, index=True)
+    actor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    precheck_token = Column(String(64), unique=True, nullable=False, index=True)
+    content_hash = Column(String(64), nullable=False)
+    import_format = Column(String(10), nullable=False)
+    item_count = Column(Integer, nullable=False, default=0)
+    action_type = Column(String(20), nullable=False)
+    has_conflict = Column(Boolean, nullable=False, default=False)
+    conflict_types = Column(JSON, nullable=True)
+    conflict_details = Column(JSON, nullable=True)
+    reused_version_id = Column(Integer, ForeignKey("manifest_versions.id"), nullable=True)
+    reused_version_number = Column(Integer, nullable=True)
+    planned_version_number = Column(Integer, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    consumed = Column(Boolean, nullable=False, default=False)
+    consumed_at = Column(DateTime(timezone=True), nullable=True)
+    extra_data = Column(JSON, nullable=True)
+
+    batch = relationship("DeliveryBatch", foreign_keys=[batch_id])
+    reused_version = relationship("ManifestVersion", foreign_keys=[reused_version_id])
+
+
 class User(Base):
     __tablename__ = "users"
 

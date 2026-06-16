@@ -287,13 +287,18 @@ curl -X POST "$API/api/batches/$BATCH_ID/transition" \
 ```
 **预期**: 400 Bad Request，明确指出不允许的流转路径
 
-#### B. 重复导入同一文件（不会产生半截数据，v3 正常创建）
+#### B. 重复导入完全相同内容（幂等复用，不产生新版本）
+在步骤 12 导入 v2 之后，如果再次导入完全相同的 `manifest_sample_repaired_v2.csv` 文件：
 ```bash
-curl -X POST "$API/api/batches/1/manifests/import" \
+curl -X POST "$API/api/batches/$BATCH_ID/manifests/import" \
   -H "X-User-Id: 5" \
-  -F "file=@samples/manifest_sample_good.csv;type=text/csv"
+  -F "file=@samples/manifest_sample_repaired_v2.csv;type=text/csv"
 ```
-如果批次状态允许导入，会创建 v3，否则明确拒绝
+**预期输出**: `success=true`, `version_number=2`, `message="内容无变更，复用现有版本 v2。"`
+不会创建 v3，版本历史保持 2 个，审批日志无新增 IMPORT 记录，不会污染导出报告。
+
+如果导入**内容不同**的文件（例如修改了某个字段值），则会正常创建 v3。
+如果批次状态不允许导入（如已归档），则明确拒绝，无半截数据写入。
 
 #### C. 已归档批次禁止更新
 ```bash
