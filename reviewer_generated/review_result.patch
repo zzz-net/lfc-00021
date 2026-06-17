@@ -1,0 +1,77 @@
+﻿*** Begin Patch
+*** Add File: C:\Users\admin\Desktop\solocode-workflow\control\projects\lfc-00021\phases\p09\attempts\a01\review_result.json
++{
++  "repo_id": "lfc-00021",
++  "phase_no": 9,
++  "attempt_id": "lfc-00021-9-a01",
++  "verdict": "fail",
++  "review_profile": "manual_agent",
++  "reviewer_model": "codex-agent",
++  "dissatisfaction_reasons": {
++    "product": "产物在沙盒配置开关上不满足题面。`app/archive_service.py` 第97-117行虽然写入了 `sandbox.enabled`、`sandbox.require_admin_confirm`、`sandbox.auto_expire_hours` 默认配置，但 `app/routers/archive.py` 第169-180行的系统配置更新接口只允许修改 `archive.enabled` 和 `archive.allow_overwrite_existing_batch`。我实际调用 `PUT /api/system-configs/sandbox.enabled` 返回 400“`不允许修改配置项 sandbox.enabled`”，导致恢复后验收沙盒无法被管理员真实开关或调整确认策略，题目要求的“配置开关”没有落成可用能力。",
++    "process": "过程在设计配置能力时停在“写默认值和补测试脚本”，没有把题面要求的沙盒开关接入实际可控入口。`process_trace.md` 第202-241行多次表述“更新 archive_service.py 默认配置、创建 sandbox_service.py”，第449-492行继续把重点放在“创建 test_sandbox_acceptance.py”，但没有出现同步扩展 `/system-configs` 更新白名单或补充沙盒配置管理接口的动作。结果是模型声称已加配置开关，产物里却只剩数据库默认值，管理员无法操作该开关。"
++  },
++  "process_review": {
++    "angles": [
++      "任务规划",
++      "操作过程"
++    ],
++    "evidence": [
++      "process_trace.md:202-241 显示模型把实现拆成“更新 archive_service.py 默认配置、创建 sandbox_service.py、创建 router/test”，关注点是补默认配置和新模块，并未规划配置管理入口如何支持 sandbox.*。",
++      "process_trace.md:449-492 多次写明“现在我需要创建测试文件 test_sandbox_acceptance.py”，说明后续精力集中在补验收脚本，而不是核对系统配置接口是否能实际修改 `sandbox.enabled`、`sandbox.require_admin_confirm`、`sandbox.auto_expire_hours`。",
++      "process_trace.md 中能看到对 `models.py` 新增 `CONFIG_KEY_SANDBOX_ENABLED`、`CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM`、`CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS` 的改动记录，但没有对应扩展 `/system-configs/{config_key}` 可修改白名单的编辑证据；最终产物里 `app/routers/archive.py` 仍保留 `valid_keys = [CONFIG_KEY_ARCHIVE_ENABLED, CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE]`。"
++    ],
++    "source_path": "C:\\Users\\admin\\Desktop\\solocode-workflow\\control\\projects\\lfc-00021\\phases\\p09\\attempts\\a01\\process_trace.md"
++  },
++  "business_test_summary": "产物不满意：`app/archive_service.py` 已落库沙盒相关配置，但 `app/routers/archive.py` 的系统配置更新接口拒绝修改 `sandbox.enabled` 等键；我实际调用 `PUT /api/system-configs/sandbox.enabled` 返回 400，题面要求的配置开关不可用。过程不满意：模型在 trace 里把工作重心放在补默认配置和 `test_sandbox_acceptance.py`，没有继续把沙盒配置接进可操作的管理入口，导致宣称已实现“配置开关”但产物只剩静态默认值。",
++  "findings": [
++    {
++      "severity": "high",
++      "category": "completeness",
++      "file": "app/routers/archive.py",
++      "line": 169,
++      "description": "系统配置更新接口的 `valid_keys` 只包含 `archive.enabled` 和 `archive.allow_overwrite_existing_batch`，未包含题面新增的 `sandbox.enabled`、`sandbox.require_admin_confirm`、`sandbox.auto_expire_hours`。",
++      "reproduction": "启动服务后先 `GET /api/system-configs/` 可看到 `sandbox.enabled=true`、`sandbox.require_admin_confirm=true`、`sandbox.auto_expire_hours=24`，再以 admin 调用 `PUT /api/system-configs/sandbox.enabled`，接口返回 400：`不允许修改配置项 sandbox.enabled。允许修改的配置: ['archive.enabled', 'archive.allow_overwrite_existing_batch']`。",
++      "impact": "管理员无法按题面开关恢复后验收沙盒，也无法调整正式确认权限策略或过期时间；所谓“配置开关”不能被真实使用。"
++    }
++  ],
++  "executed_commands": [
++    {
++      "command": "python -m uvicorn main:app --host 127.0.0.1 --port 18093",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 0,
++      "observation": "服务可正常启动，Uvicorn 监听 http://127.0.0.1:18093。"
++    },
++    {
++      "command": "独立 reviewer 请求链路：创建批次 -> 预检查/导入 v1 -> validate -> pending_review -> approved -> archived -> POST /api/batches/{id}/archive/export",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 0,
++      "observation": "成功构造归档包并验证项目可编译、可启动、可完成 archive export 主链路。"
++    },
++    {
++      "command": "POST /api/sandbox/restore -> POST /api/sandbox/{token}/import -> GET /api/sandbox/{token}/diff -> POST /api/sandbox/{token}/precheck -> POST /api/sandbox/{token}/confirm",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 0,
++      "observation": "主成功链路可跑通：归档批次恢复到沙盒、导入候选版本、查看差异、预检查出 WARNING 结论、由 admin 完成正式确认。"
++    },
++    {
++      "command": "POST /api/sandbox/{token}/confirm as reviewer; POST /api/sandbox/{token}/confirm as lead",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 0,
++      "observation": "失败/权限链路符合实现：reviewer 返回 403，lead 在 `sandbox.require_admin_confirm=true` 下也返回 403。"
++    },
++    {
++      "command": "停止本次复核启动的 PID 后重启同端口服务，再执行 GET /api/sandbox/、GET /api/sandbox/{token}、GET /api/sandbox/{token}/audit-logs、GET /api/sandbox/{token}/eligibility",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 0,
++      "observation": "状态保持链路通过：服务重启后沙盒会话、预检查结果和审计日志仍可查询。"
++    },
++    {
++      "command": "GET /api/system-configs/; PUT /api/system-configs/sandbox.enabled {\"config_value\":\"false\",\"value_type\":\"bool\"}",
++      "cwd": "D:\\workSpace\\AI__SPACE\\lfc-00021",
++      "exit_code": 1,
++      "observation": "边界验证失败：读取时可见 `sandbox.enabled`、`sandbox.require_admin_confirm`、`sandbox.auto_expire_hours`，但更新 `sandbox.enabled` 返回 400，证明配置开关未真正开放。"
++    }
++  ]
++}
+*** End Patch

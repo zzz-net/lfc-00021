@@ -16,6 +16,8 @@ from app.models import (
     ValidationResult, RejectionRecord, ApprovalLog, VersionDiffSnapshot,
     ImportPrecheck, ValidationRule, SystemConfig,
     CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE, CONFIG_KEY_ARCHIVE_ENABLED,
+    CONFIG_KEY_SANDBOX_ENABLED, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM,
+    CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS,
     APPROVAL_LOG_ACTION_EXPORT_ARCHIVE,
     APPROVAL_LOG_ACTION_TRY_IMPORT_ARCHIVE,
     APPROVAL_LOG_ACTION_RESTORE_ARCHIVE,
@@ -98,6 +100,12 @@ def ensure_default_configs(db: Session):
          "是否启用验收归档包功能（导出/导入）"),
         (CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE, "false", "bool",
          "导入归档包时，是否允许覆盖已存在相同 batch_code 的批次"),
+        (CONFIG_KEY_SANDBOX_ENABLED, "true", "bool",
+         "是否启用恢复后验收沙盒功能"),
+        (CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, "true", "bool",
+         "沙盒正式确认是否需要 admin 权限（否则 lead 也可确认）"),
+        (CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS, "24", "int",
+         "沙盒会话自动过期时间（小时）"),
     ]
     for key, val, vtype, desc in defaults:
         existing = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()

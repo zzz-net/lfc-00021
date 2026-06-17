@@ -1,0 +1,3856 @@
+{
+  "api": "http://127.0.0.1:18093",
+  "steps": [
+    {
+      "step": "create_batch",
+      "status_code": 201,
+      "body": {
+        "id": 262,
+        "batch_code": "REVIEW-SB-1781669075",
+        "name": "Reviewer sandbox verification batch",
+        "description": "Independent review flow",
+        "status": "draft",
+        "submitter_id": 5,
+        "current_manifest_version_id": null,
+        "created_at": "2026-06-17T04:04:35",
+        "updated_at": "2026-06-17T04:04:35",
+        "archived_at": null,
+        "archived_by": null
+      }
+    },
+    {
+      "step": "precheck_v1",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "precheck_token": "0QOo-USo_ivrCifMjs5rnGTzMwLU83D43D-STxJNwSg",
+        "batch_id": 262,
+        "action_type": "NEW_VERSION",
+        "has_conflict": false,
+        "import_format": "csv",
+        "item_count": 5,
+        "content_hash": "835b87b173a23caaa015ecd69a495ad16f26a25ea166f96464326afe0ddc9d09",
+        "planned_version_number": 1,
+        "reused_version_id": null,
+        "reused_version_number": null,
+        "conflicts": [],
+        "batch_status": "draft",
+        "can_import": true,
+        "expires_at": "2026-06-17T04:34:35.606430",
+        "reasons": [
+          "清单内容与历史版本存在差异，将创建新版本。",
+          "未检测到阻塞性冲突，可以执行导入。"
+        ],
+        "message": "预检查通过：将创建新版本 v1。",
+        "parse_errors": []
+      }
+    },
+    {
+      "step": "import_v1",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "manifest_version_id": 380,
+        "version_number": 1,
+        "item_count": 5,
+        "errors": [],
+        "message": "清单 v1 导入成功，共 5 条记录。"
+      }
+    },
+    {
+      "step": "validate_v1",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "manifest_version_id": 380,
+        "total_rules": 9,
+        "total_checks": 45,
+        "passed": 45,
+        "failed": 0,
+        "warnings": 0,
+        "validation_summary": {
+          "total_rules": 9,
+          "total_items": 5,
+          "total_checks": 45,
+          "passed": 45,
+          "failed": 0,
+          "warnings": 0,
+          "validation_passed": true,
+          "failed_items_count": 0,
+          "warning_items_count": 0
+        },
+        "results": [
+          {
+            "id": 6031,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6032,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_name",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6033,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6034,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6035,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6036,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6037,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6038,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6039,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1446,
+            "rule_code": "CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "total_amount",
+            "line_number": 2,
+            "item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6040,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6041,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_name",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6042,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6043,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6044,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6045,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6046,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6047,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6048,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1447,
+            "rule_code": "CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "total_amount",
+            "line_number": 3,
+            "item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6049,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6050,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_name",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6051,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6052,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6053,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6054,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6055,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6056,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6057,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1448,
+            "rule_code": "CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "total_amount",
+            "line_number": 4,
+            "item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6058,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6059,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_name",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6060,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6061,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6062,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6063,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6064,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6065,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6066,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1449,
+            "rule_code": "CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "total_amount",
+            "line_number": 5,
+            "item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6067,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6068,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_name",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6069,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6070,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6071,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6072,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "unit_price",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6073,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "quantity",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6074,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "item_id",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 6075,
+            "manifest_version_id": 380,
+            "manifest_item_id": 1450,
+            "rule_code": "CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "field_name": "total_amount",
+            "line_number": 6,
+            "item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          }
+        ],
+        "message": "校验完成: 45 通过, 0 错误, 0 警告. 已同步刷新 0 份版本差异快照数据面."
+      }
+    },
+    {
+      "step": "to_pending_review",
+      "status_code": 200,
+      "body": {
+        "id": 262,
+        "batch_code": "REVIEW-SB-1781669075",
+        "name": "Reviewer sandbox verification batch",
+        "description": "Independent review flow",
+        "status": "pending_review",
+        "submitter_id": 5,
+        "current_manifest_version_id": 380,
+        "created_at": "2026-06-17T04:04:35",
+        "updated_at": "2026-06-17T04:04:35",
+        "archived_at": null,
+        "archived_by": null
+      }
+    },
+    {
+      "step": "to_approved",
+      "status_code": 200,
+      "body": {
+        "id": 262,
+        "batch_code": "REVIEW-SB-1781669075",
+        "name": "Reviewer sandbox verification batch",
+        "description": "Independent review flow",
+        "status": "approved",
+        "submitter_id": 5,
+        "current_manifest_version_id": 380,
+        "created_at": "2026-06-17T04:04:35",
+        "updated_at": "2026-06-17T04:04:35",
+        "archived_at": null,
+        "archived_by": null
+      }
+    },
+    {
+      "step": "to_archived",
+      "status_code": 200,
+      "body": {
+        "id": 262,
+        "batch_code": "REVIEW-SB-1781669075",
+        "name": "Reviewer sandbox verification batch",
+        "description": "Independent review flow",
+        "status": "archived",
+        "submitter_id": 5,
+        "current_manifest_version_id": 380,
+        "created_at": "2026-06-17T04:04:35",
+        "updated_at": "2026-06-17T04:04:35",
+        "archived_at": "2026-06-17T12:04:35.694548",
+        "archived_by": 2
+      }
+    },
+    {
+      "step": "archive_export",
+      "status_code": 200,
+      "body": "PK\u0003\u0004\u0014\u0000\u0000\u0000\b\u0000�`�\\\u001a���w\u0001\u0000\u0000�\u0003\u0000\u0000\r\u0000\u0000\u0000manifest.jsonu�=o�0\u0018���\n���0\u0004(��2tm�v�*˱_�-��6��(��\u0006\u0012h>\u0018}w��\u000f�\u0005B^�tM-ف6BI/C\u001e^��CgQ�J�\u0003\"x'�\u0013�x\u0012�~���\u001cx�\rq��h�n�e%a�C�}ټ?o>��OK�<�8N��\"'8QZ\u0014B��Ń8�\u0002$hj�\u0013j���\u000f�\u001f��7\u001cd�:\u000b�U�q���U~�'�\u0001=,�.;�����\n('�T\u0016C�Q�f@h#�\u0018�)\u0018`֩�ɟ�|~Co�CM����\u0004͍!,ԣ����+$\u001aL[����=��\f�4\u001f\r�4Z��H��Q\u0014u��%�˖�~��a\u0005�\"ω��1���0{�Ƹ�$sQ���mm\u0005f\n8���a�uC�{\u000b\u001d\u000f���P�J�i���2�g1��\u0006R\u0019��aeh\u001d�\u0002;-�a��x\u000e۴b���9\u0003���K~\u0019J]���j�'۪Z\u001c�\u0000PK\u0003\u0004\u0014\u0000\u0000\u0000\b\u0000�`�\\���_@\u0000\u0000\u0000H\u0000\u0000\u0000\u000b\u0000\u0000\u0000hash.sha256\u0005��\u0001�0\b\u0004��)\u001c\u0001\u001e\u0002���w�\u0010`�\u0011r�/��\u0000j��v��D\u0005\u001d\u0012�jj�\u0013�-(���\u001d�Yh\u0013�A,��y\u001dPK\u0003\u0004\u0014\u0000\u0000\u0000\b\u0000�`�\\;�S��\u0000\u0000\u0000`\u0001\u0000\u0000\u000f\u0000\u0000\u0000data/batch.json��Mk�0\f����y\u0019���i��\u001ezm�v4��P��\u0004[I7���l�\u001d�\u000e\u0003�ëG�>>9:~dR�\u0007�{C���� I�rz9�^��SU�Z��ط<Qތ[\u001dV�;\u0004\u0016�w���V\b8�5��g�+�\u000e�\r8g1w���\u0019R��Bq`��t�d$CK̐\t��+��.��D\u0010tٴM�]BH�z4\u001e\u0007�����7b׉�\u00040\u0004N\u001bʆRHU\t�.y\u0016�1Ů�����g��T-7�Q\u001d���~��G~��7PK\u0003\u0004\u0014\u0000\u0000\u0000\b\u0000�`�\\b\t�\u001f�\u0001\u0000\u0000<\u0003\u0000\u0000\u001b\u0000\u0000\u0000data/manifest_versions.json]�ak�@\u0018ǿJ��\\�$]�rTDp\"��M�5����R/��1\u0006\u001dc\u0013�RŽ�nC��\u0004\u0015|#�8���\u0012�-�Kb\b���������{ncO#���h�@����{�n.\u0018�!�\u0011f\u0011\t�K㠏��u)�`\u00182�n�,@\\j�\u0017��JǾ�ߕ�UW\n�\u0001\r�\t����AsU~-+�q\u001c�^\u0018S^�\u0018ڑ5�8W�}�|�(��Y�('|\u0017ĔpwȈ�\u0001\u000f9\u001a�(P\u001c���cd�e�l����\\oB����Y:��{�;=���s�����Wz�\u0007X\u0010��܀\u0010ئcA���:X\\�ϒ���mvRFj\\\u0003����F�s�\u0014�G��,=�\u0003C\u0012\u0014Q�-ǁ9�\u0002U�\u001a�\u0005��Z���u��v;@W��\u001d������\u000f�4I�\u0007��[v:��M�\u0002��y�]>��x���L�נ����z�i�\u0010ۂ��􇸚�gIa�Q, &���x�|N'\u001f�C6R]�Zs�a���~",
+      "content_length": 6792
+    },
+    {
+      "step": "sandbox_restore",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "session_id": 9,
+        "source_archive_id": "47e5d72903c68fed3b315c35",
+        "source_batch_code": "REVIEW-SB-1781669075",
+        "status": "pending",
+        "message": "归档包已恢复到沙盒环境，沙盒会话有效期 24 小时。请在沙盒内导入新版本并执行预检查。",
+        "restored_version_count": 1,
+        "conflicts": [],
+        "info": {
+          "expires_at": "2026-06-18T04:04:35.740108",
+          "restored_versions": 1
+        }
+      }
+    },
+    {
+      "step": "reviewer_confirm_blocked",
+      "status_code": 403,
+      "body": {
+        "success": false,
+        "error": {
+          "type": "HTTPException",
+          "code": 403,
+          "message": "权限不足：系统配置要求只有 admin 角色才能执行沙盒确认/拒绝操作。您的角色: reviewer"
+        }
+      }
+    },
+    {
+      "step": "sandbox_import_v2",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "session_id": 9,
+        "version_number": 2,
+        "item_count": 7,
+        "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d",
+        "message": "候选版本 v2 已导入沙盒。请执行预检查查看差异和冲突。",
+        "parse_errors": []
+      }
+    },
+    {
+      "step": "sandbox_diff_as_lead",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "base_version_number": 1,
+        "candidate_version_number": 2,
+        "metadata": {
+          "batch_id": 9,
+          "batch_code": "[SANDBOX] REVIEW-SB-1781669075",
+          "batch_name": "[沙盒] REVIEW-SB-1781669075",
+          "old_version": 1,
+          "new_version": 2,
+          "old_import": {
+            "version_number": 1,
+            "imported_by_username": "submitter_chen",
+            "imported_by_display_name": "陈交付",
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 5,
+            "import_format": "csv"
+          },
+          "new_import": {
+            "version_number": 2,
+            "imported_by_username": "lead_wang",
+            "imported_by_display_name": "王组长",
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 7,
+            "import_format": "csv"
+          },
+          "generated_at": "2026-06-17T12:04:35.775265",
+          "generated_by_username": "lead_wang",
+          "generated_by_display_name": "王组长"
+        },
+        "summary": {
+          "total_items_old": 5,
+          "total_items_new": 7,
+          "added_count": 2,
+          "removed_count": 0,
+          "modified_count": 3,
+          "unchanged_count": 2,
+          "field_change_count": 16,
+          "unresolved_rejections_old": 0,
+          "unresolved_rejections_new": 0,
+          "validation_errors_old": 0,
+          "validation_errors_new": 0,
+          "validation_warnings_old": 0,
+          "validation_warnings_new": 0,
+          "validation_passed_old": 45,
+          "validation_passed_new": 0,
+          "validation_total_old": 45,
+          "validation_total_new": 0,
+          "validation_changes_new_violation": 0,
+          "validation_changes_resolved": 0,
+          "validation_changes_modified": 0,
+          "validation_changes_new_passed": 0,
+          "validation_changes_removed_passed": 0,
+          "validation_changes_unchanged": 0,
+          "validation_changes_total": 0,
+          "old_version_validation_status": "passed",
+          "new_version_validation_status": "pending"
+        },
+        "added_items": [
+          {
+            "item_key": "ITEM-006",
+            "action": "added",
+            "line_number_old": null,
+            "line_number_new": 4,
+            "old_data": null,
+            "new_data": {
+              "item_id": "ITEM-006",
+              "item_name": "企业级 RAID 卡",
+              "quantity": "25",
+              "unit_price": "1899.00",
+              "total_amount": "47475.00",
+              "description": "新增：支持 RAID 0/1/5/10"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": null,
+                "new_value": "新增：支持 RAID 0/1/5/10",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_id",
+                "old_value": null,
+                "new_value": "ITEM-006",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": null,
+                "new_value": "企业级 RAID 卡",
+                "change_type": "added"
+              },
+              {
+                "field_name": "quantity",
+                "old_value": null,
+                "new_value": "25",
+                "change_type": "added"
+              },
+              {
+                "field_name": "total_amount",
+                "old_value": null,
+                "new_value": "47475.00",
+                "change_type": "added"
+              },
+              {
+                "field_name": "unit_price",
+                "old_value": null,
+                "new_value": "1899.00",
+                "change_type": "added"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-007",
+            "action": "added",
+            "line_number_old": null,
+            "line_number_new": 8,
+            "old_data": null,
+            "new_data": {
+              "item_id": "ITEM-007",
+              "item_name": "光纤模块",
+              "quantity": "100",
+              "unit_price": "399.00",
+              "total_amount": "39900.00",
+              "description": "新增：万兆多模 SFP+"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": null,
+                "new_value": "新增：万兆多模 SFP+",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_id",
+                "old_value": null,
+                "new_value": "ITEM-007",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": null,
+                "new_value": "光纤模块",
+                "change_type": "added"
+              },
+              {
+                "field_name": "quantity",
+                "old_value": null,
+                "new_value": "100",
+                "change_type": "added"
+              },
+              {
+                "field_name": "total_amount",
+                "old_value": null,
+                "new_value": "39900.00",
+                "change_type": "added"
+              },
+              {
+                "field_name": "unit_price",
+                "old_value": null,
+                "new_value": "399.00",
+                "change_type": "added"
+              }
+            ]
+          }
+        ],
+        "removed_items": [],
+        "modified_items": [
+          {
+            "item_key": "ITEM-001",
+            "action": "modified",
+            "line_number_old": 2,
+            "line_number_new": 2,
+            "old_data": {
+              "item_id": "ITEM-001",
+              "item_name": "高性能服务器主板",
+              "quantity": "50",
+              "unit_price": "1299.00",
+              "total_amount": "64950.00",
+              "description": "企业级服务器专用主板"
+            },
+            "new_data": {
+              "item_id": "ITEM-001",
+              "item_name": "高性能服务器主板 REV.B",
+              "quantity": "50",
+              "unit_price": "1299.00",
+              "total_amount": "64950.00",
+              "description": "企业级服务器专用主板 - 修复 BIOS 兼容性问题"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "企业级服务器专用主板",
+                "new_value": "企业级服务器专用主板 - 修复 BIOS 兼容性问题",
+                "change_type": "modified"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": "高性能服务器主板",
+                "new_value": "高性能服务器主板 REV.B",
+                "change_type": "modified"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-002",
+            "action": "modified",
+            "line_number_old": 3,
+            "line_number_new": 3,
+            "old_data": {
+              "item_id": "ITEM-002",
+              "item_name": "16GB DDR4内存条",
+              "quantity": "200",
+              "unit_price": "299.50",
+              "total_amount": "59900.00",
+              "description": "服务器内存条"
+            },
+            "new_data": {
+              "item_id": "ITEM-002",
+              "item_name": "16GB DDR4内存条",
+              "quantity": "200",
+              "unit_price": "299.50",
+              "total_amount": "59900.00",
+              "description": "服务器内存条 - ECC校验"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "服务器内存条",
+                "new_value": "服务器内存条 - ECC校验",
+                "change_type": "modified"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-003",
+            "action": "modified",
+            "line_number_old": 4,
+            "line_number_new": 5,
+            "old_data": {
+              "item_id": "ITEM-003",
+              "item_name": "1TB NVMe SSD",
+              "quantity": "100",
+              "unit_price": "699.00",
+              "total_amount": "69900.00",
+              "description": "高速固态硬盘"
+            },
+            "new_data": {
+              "item_id": "ITEM-003",
+              "item_name": "1TB NVMe SSD",
+              "quantity": "100",
+              "unit_price": "699.00",
+              "total_amount": "69900.00",
+              "description": "高速固态硬盘 - 散热片升级"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "高速固态硬盘",
+                "new_value": "高速固态硬盘 - 散热片升级",
+                "change_type": "modified"
+              }
+            ]
+          }
+        ],
+        "unchanged_items": [
+          {
+            "item_key": "ITEM-004",
+            "action": "unchanged",
+            "change_summary": "内容无变更",
+            "changed_fields": []
+          },
+          {
+            "item_key": "ITEM-005",
+            "action": "unchanged",
+            "change_summary": "内容无变更",
+            "changed_fields": []
+          }
+        ],
+        "validation_changes": [],
+        "message": "版本差异计算完成: v1 -> v2。 新增 2 项，删除 0 项，修改 3 项，无变更 2 项。"
+      }
+    },
+    {
+      "step": "sandbox_diff_as_reviewer",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "base_version_number": 1,
+        "candidate_version_number": 2,
+        "metadata": {
+          "batch_id": 9,
+          "batch_code": "[SANDBOX] REVIEW-SB-1781669075",
+          "batch_name": "[沙盒] REVIEW-SB-1781669075",
+          "old_version": 1,
+          "new_version": 2,
+          "old_import": {
+            "version_number": 1,
+            "imported_by_username": "submitter_chen",
+            "imported_by_display_name": "陈交付",
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 5,
+            "import_format": "csv"
+          },
+          "new_import": {
+            "version_number": 2,
+            "imported_by_username": "lead_wang",
+            "imported_by_display_name": "王组长",
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 7,
+            "import_format": "csv"
+          },
+          "generated_at": "2026-06-17T12:04:35.788898",
+          "generated_by_username": "reviewer_li",
+          "generated_by_display_name": "李评审"
+        },
+        "summary": {
+          "total_items_old": 5,
+          "total_items_new": 7,
+          "added_count": 2,
+          "removed_count": 0,
+          "modified_count": 3,
+          "unchanged_count": 2,
+          "field_change_count": 16,
+          "unresolved_rejections_old": 0,
+          "unresolved_rejections_new": 0,
+          "validation_errors_old": 0,
+          "validation_errors_new": 0,
+          "validation_warnings_old": 0,
+          "validation_warnings_new": 0,
+          "validation_passed_old": 45,
+          "validation_passed_new": 0,
+          "validation_total_old": 45,
+          "validation_total_new": 0,
+          "validation_changes_new_violation": 0,
+          "validation_changes_resolved": 0,
+          "validation_changes_modified": 0,
+          "validation_changes_new_passed": 0,
+          "validation_changes_removed_passed": 0,
+          "validation_changes_unchanged": 0,
+          "validation_changes_total": 0,
+          "old_version_validation_status": "passed",
+          "new_version_validation_status": "pending"
+        },
+        "added_items": [
+          {
+            "item_key": "ITEM-006",
+            "action": "added",
+            "line_number_old": null,
+            "line_number_new": 4,
+            "old_data": null,
+            "new_data": {
+              "item_id": "ITEM-006",
+              "item_name": "企业级 RAID 卡",
+              "quantity": "25",
+              "unit_price": "1899.00",
+              "total_amount": "47475.00",
+              "description": "新增：支持 RAID 0/1/5/10"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": null,
+                "new_value": "新增：支持 RAID 0/1/5/10",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_id",
+                "old_value": null,
+                "new_value": "ITEM-006",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": null,
+                "new_value": "企业级 RAID 卡",
+                "change_type": "added"
+              },
+              {
+                "field_name": "quantity",
+                "old_value": null,
+                "new_value": "25",
+                "change_type": "added"
+              },
+              {
+                "field_name": "total_amount",
+                "old_value": null,
+                "new_value": "47475.00",
+                "change_type": "added"
+              },
+              {
+                "field_name": "unit_price",
+                "old_value": null,
+                "new_value": "1899.00",
+                "change_type": "added"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-007",
+            "action": "added",
+            "line_number_old": null,
+            "line_number_new": 8,
+            "old_data": null,
+            "new_data": {
+              "item_id": "ITEM-007",
+              "item_name": "光纤模块",
+              "quantity": "100",
+              "unit_price": "399.00",
+              "total_amount": "39900.00",
+              "description": "新增：万兆多模 SFP+"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": null,
+                "new_value": "新增：万兆多模 SFP+",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_id",
+                "old_value": null,
+                "new_value": "ITEM-007",
+                "change_type": "added"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": null,
+                "new_value": "光纤模块",
+                "change_type": "added"
+              },
+              {
+                "field_name": "quantity",
+                "old_value": null,
+                "new_value": "100",
+                "change_type": "added"
+              },
+              {
+                "field_name": "total_amount",
+                "old_value": null,
+                "new_value": "39900.00",
+                "change_type": "added"
+              },
+              {
+                "field_name": "unit_price",
+                "old_value": null,
+                "new_value": "399.00",
+                "change_type": "added"
+              }
+            ]
+          }
+        ],
+        "removed_items": [],
+        "modified_items": [
+          {
+            "item_key": "ITEM-001",
+            "action": "modified",
+            "line_number_old": 2,
+            "line_number_new": 2,
+            "old_data": {
+              "item_id": "ITEM-001",
+              "item_name": "高性能服务器主板",
+              "quantity": "50",
+              "unit_price": "1299.00",
+              "total_amount": "64950.00",
+              "description": "企业级服务器专用主板"
+            },
+            "new_data": {
+              "item_id": "ITEM-001",
+              "item_name": "高性能服务器主板 REV.B",
+              "quantity": "50",
+              "unit_price": "1299.00",
+              "total_amount": "64950.00",
+              "description": "企业级服务器专用主板 - 修复 BIOS 兼容性问题"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "企业级服务器专用主板",
+                "new_value": "企业级服务器专用主板 - 修复 BIOS 兼容性问题",
+                "change_type": "modified"
+              },
+              {
+                "field_name": "item_name",
+                "old_value": "高性能服务器主板",
+                "new_value": "高性能服务器主板 REV.B",
+                "change_type": "modified"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-002",
+            "action": "modified",
+            "line_number_old": 3,
+            "line_number_new": 3,
+            "old_data": {
+              "item_id": "ITEM-002",
+              "item_name": "16GB DDR4内存条",
+              "quantity": "200",
+              "unit_price": "299.50",
+              "total_amount": "59900.00",
+              "description": "服务器内存条"
+            },
+            "new_data": {
+              "item_id": "ITEM-002",
+              "item_name": "16GB DDR4内存条",
+              "quantity": "200",
+              "unit_price": "299.50",
+              "total_amount": "59900.00",
+              "description": "服务器内存条 - ECC校验"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "服务器内存条",
+                "new_value": "服务器内存条 - ECC校验",
+                "change_type": "modified"
+              }
+            ]
+          },
+          {
+            "item_key": "ITEM-003",
+            "action": "modified",
+            "line_number_old": 4,
+            "line_number_new": 5,
+            "old_data": {
+              "item_id": "ITEM-003",
+              "item_name": "1TB NVMe SSD",
+              "quantity": "100",
+              "unit_price": "699.00",
+              "total_amount": "69900.00",
+              "description": "高速固态硬盘"
+            },
+            "new_data": {
+              "item_id": "ITEM-003",
+              "item_name": "1TB NVMe SSD",
+              "quantity": "100",
+              "unit_price": "699.00",
+              "total_amount": "69900.00",
+              "description": "高速固态硬盘 - 散热片升级"
+            },
+            "field_changes": [
+              {
+                "field_name": "description",
+                "old_value": "高速固态硬盘",
+                "new_value": "高速固态硬盘 - 散热片升级",
+                "change_type": "modified"
+              }
+            ]
+          }
+        ],
+        "unchanged_items": [
+          {
+            "item_key": "ITEM-004",
+            "action": "unchanged",
+            "change_summary": "内容无变更",
+            "changed_fields": []
+          },
+          {
+            "item_key": "ITEM-005",
+            "action": "unchanged",
+            "change_summary": "内容无变更",
+            "changed_fields": []
+          }
+        ],
+        "validation_changes": [],
+        "message": "版本差异计算完成: v1 -> v2。 新增 2 项，删除 0 项，修改 3 项，无变更 2 项。"
+      }
+    },
+    {
+      "step": "sandbox_precheck",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "session_id": 9,
+        "overall_result": "WARNING",
+        "passed": true,
+        "recommended_action": "MANUAL_REVIEW",
+        "precheck_passed": true,
+        "total_checks": 66,
+        "passed_checks": 65,
+        "warning_checks": 1,
+        "failed_checks": 0,
+        "results": [
+          {
+            "id": 331,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 332,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 333,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 334,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 335,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 336,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 337,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 338,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 339,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 340,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 341,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 342,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 343,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 344,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 345,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 346,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 347,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 348,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 349,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 350,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 351,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 352,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 353,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 354,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 355,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 356,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 357,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 358,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 359,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 360,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 361,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 362,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 363,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 364,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 365,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 366,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 367,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 368,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 369,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 370,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 371,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 372,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 373,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 374,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 375,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 376,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 377,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 378,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 379,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 380,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 381,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 382,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 383,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 384,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 385,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 386,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 387,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 388,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 389,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 390,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 391,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 392,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 393,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 394,
+            "check_code": "BATCH_CODE_CONFLICT",
+            "check_name": "批次编码冲突检查",
+            "severity": "warning",
+            "passed": false,
+            "message": "已存在相同 batch_code 的批次 (id=262, status=archived)，确认恢复时将覆盖现有批次",
+            "suggestion": "请确认是否要覆盖现有批次。覆盖将删除现有批次的所有数据并替换为沙盒中的内容。",
+            "details": {
+              "existing_batch_id": 262,
+              "existing_status": "archived"
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 395,
+            "check_code": "HAS_CHANGES",
+            "check_name": "内容变更检查",
+            "severity": "info",
+            "passed": true,
+            "message": "检测到 5 项内容变更 (新增 2，删除 0，修改 3)",
+            "suggestion": "请在差异视图中仔细核对所有变更内容。",
+            "details": {
+              "base_version": 1,
+              "candidate_version": 2,
+              "added_count": 2,
+              "removed_count": 0,
+              "modified_count": 3
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 396,
+            "check_code": "CONTENT_HASH_VALID",
+            "check_name": "内容哈希完整性",
+            "severity": "info",
+            "passed": true,
+            "message": "候选版本内容哈希校验通过: 12ea21fcedac5628...",
+            "suggestion": null,
+            "details": {
+              "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d"
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          }
+        ],
+        "conflict_types": [
+          "BATCH_CODE_CONFLICT"
+        ],
+        "reasons": [
+          "所有阻塞性检查项已通过",
+          "存在 1 项警告，请人工确认"
+        ],
+        "message": "预检查完成。结果: WARNING。 65/66 通过，1 项警告。 建议人工复核后再决定。"
+      }
+    },
+    {
+      "step": "lead_confirm_blocked_by_config",
+      "status_code": 403,
+      "body": {
+        "success": false,
+        "error": {
+          "type": "HTTPException",
+          "code": 403,
+          "message": "权限不足：系统配置要求只有 admin 角色才能执行沙盒确认/拒绝操作。您的角色: lead"
+        }
+      }
+    },
+    {
+      "step": "admin_confirm_success",
+      "status_code": 200,
+      "body": {
+        "success": true,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "session_id": 9,
+        "status": "confirmed",
+        "target_batch_id": 262,
+        "target_batch_code": "REVIEW-SB-1781669075",
+        "confirmed_by": 1,
+        "confirmed_at": "2026-06-17T04:04:35.917734",
+        "restored_version_count": 2,
+        "message": "沙盒内容已成功恢复到正式环境。新批次 ID: 262，批次编码: REVIEW-SB-1781669075，已覆盖原有批次 ID: 262"
+      }
+    },
+    {
+      "step": "sandbox_detail_after_confirm",
+      "status_code": 200,
+      "body": {
+        "id": 9,
+        "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+        "source_archive_id": "47e5d72903c68fed3b315c35",
+        "source_batch_code": "REVIEW-SB-1781669075",
+        "original_batch_id": 262,
+        "target_batch_id": 262,
+        "status": "confirmed",
+        "created_by": 2,
+        "created_at": "2026-06-17T04:04:35",
+        "expires_at": "2026-06-18T04:04:35.740108",
+        "confirmed_by": 1,
+        "confirmed_at": "2026-06-17T04:04:35.917734",
+        "rejected_by": null,
+        "rejected_at": null,
+        "rejection_reason": null,
+        "precheck_passed": true,
+        "recommended_action": "MANUAL_REVIEW",
+        "conflict_types": [
+          "BATCH_CODE_CONFLICT"
+        ],
+        "extra_data": {
+          "archive_generated_at": "2026-06-17T12:04:35.711996",
+          "archive_generated_by": "lead_wang",
+          "archive_item_counts": {
+            "batch": 1,
+            "manifest_versions": 1,
+            "manifest_items": 5,
+            "validation_results": 45,
+            "rejection_records": 0,
+            "approval_logs": 6,
+            "import_prechecks": 1,
+            "version_diff_snapshots": 0,
+            "system_config_snapshot": 5,
+            "validation_rules_snapshot": 9
+          },
+          "hash_verified": true
+        },
+        "manifest_versions": [
+          {
+            "id": 14,
+            "sandbox_session_id": 9,
+            "version_number": 1,
+            "import_format": "csv",
+            "imported_by": 5,
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 5,
+            "content_hash": "835b87b173a23caaa015ecd69a495ad16f26a25ea166f96464326afe0ddc9d09",
+            "validation_status": "passed",
+            "validation_summary": {
+              "total_rules": 9,
+              "total_items": 5,
+              "total_checks": 45,
+              "passed": 45,
+              "failed": 0,
+              "warnings": 0,
+              "validation_passed": true,
+              "failed_items_count": 0,
+              "warning_items_count": 0
+            },
+            "is_candidate": false,
+            "base_version_number": null,
+            "items": [
+              {
+                "id": 76,
+                "line_number": 2,
+                "item_key": "ITEM-001",
+                "item_data": {
+                  "item_id": "ITEM-001",
+                  "item_name": "高性能服务器主板",
+                  "quantity": "50",
+                  "unit_price": "1299.00",
+                  "total_amount": "64950.00",
+                  "description": "企业级服务器专用主板"
+                }
+              },
+              {
+                "id": 77,
+                "line_number": 3,
+                "item_key": "ITEM-002",
+                "item_data": {
+                  "item_id": "ITEM-002",
+                  "item_name": "16GB DDR4内存条",
+                  "quantity": "200",
+                  "unit_price": "299.50",
+                  "total_amount": "59900.00",
+                  "description": "服务器内存条"
+                }
+              },
+              {
+                "id": 78,
+                "line_number": 4,
+                "item_key": "ITEM-003",
+                "item_data": {
+                  "item_id": "ITEM-003",
+                  "item_name": "1TB NVMe SSD",
+                  "quantity": "100",
+                  "unit_price": "699.00",
+                  "total_amount": "69900.00",
+                  "description": "高速固态硬盘"
+                }
+              },
+              {
+                "id": 79,
+                "line_number": 5,
+                "item_key": "ITEM-004",
+                "item_data": {
+                  "item_id": "ITEM-004",
+                  "item_name": "80PLUS金牌电源",
+                  "quantity": "30",
+                  "unit_price": "599.00",
+                  "total_amount": "17970.00",
+                  "description": "650W台式机电源"
+                }
+              },
+              {
+                "id": 80,
+                "line_number": 6,
+                "item_key": "ITEM-005",
+                "item_data": {
+                  "item_id": "ITEM-005",
+                  "item_name": "千兆交换机",
+                  "quantity": "10",
+                  "unit_price": "1299.00",
+                  "total_amount": "12990.00",
+                  "description": "24口企业级交换机"
+                }
+              }
+            ]
+          },
+          {
+            "id": 15,
+            "sandbox_session_id": 9,
+            "version_number": 2,
+            "import_format": "csv",
+            "imported_by": 2,
+            "imported_at": "2026-06-17T04:04:35",
+            "item_count": 7,
+            "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d",
+            "validation_status": "passed",
+            "validation_summary": {
+              "total_rules": 9,
+              "total_items": 7,
+              "total_checks": 63,
+              "passed": 63,
+              "failed": 0,
+              "warnings": 0,
+              "validation_passed": true,
+              "failed_items_count": 0,
+              "warning_items_count": 0
+            },
+            "is_candidate": true,
+            "base_version_number": 1,
+            "items": [
+              {
+                "id": 81,
+                "line_number": 2,
+                "item_key": "ITEM-001",
+                "item_data": {
+                  "item_id": "ITEM-001",
+                  "item_name": "高性能服务器主板 REV.B",
+                  "quantity": "50",
+                  "unit_price": "1299.00",
+                  "total_amount": "64950.00",
+                  "description": "企业级服务器专用主板 - 修复 BIOS 兼容性问题"
+                }
+              },
+              {
+                "id": 82,
+                "line_number": 3,
+                "item_key": "ITEM-002",
+                "item_data": {
+                  "item_id": "ITEM-002",
+                  "item_name": "16GB DDR4内存条",
+                  "quantity": "200",
+                  "unit_price": "299.50",
+                  "total_amount": "59900.00",
+                  "description": "服务器内存条 - ECC校验"
+                }
+              },
+              {
+                "id": 83,
+                "line_number": 4,
+                "item_key": "ITEM-006",
+                "item_data": {
+                  "item_id": "ITEM-006",
+                  "item_name": "企业级 RAID 卡",
+                  "quantity": "25",
+                  "unit_price": "1899.00",
+                  "total_amount": "47475.00",
+                  "description": "新增：支持 RAID 0/1/5/10"
+                }
+              },
+              {
+                "id": 84,
+                "line_number": 5,
+                "item_key": "ITEM-003",
+                "item_data": {
+                  "item_id": "ITEM-003",
+                  "item_name": "1TB NVMe SSD",
+                  "quantity": "100",
+                  "unit_price": "699.00",
+                  "total_amount": "69900.00",
+                  "description": "高速固态硬盘 - 散热片升级"
+                }
+              },
+              {
+                "id": 85,
+                "line_number": 6,
+                "item_key": "ITEM-004",
+                "item_data": {
+                  "item_id": "ITEM-004",
+                  "item_name": "80PLUS金牌电源",
+                  "quantity": "30",
+                  "unit_price": "599.00",
+                  "total_amount": "17970.00",
+                  "description": "650W台式机电源"
+                }
+              },
+              {
+                "id": 86,
+                "line_number": 7,
+                "item_key": "ITEM-005",
+                "item_data": {
+                  "item_id": "ITEM-005",
+                  "item_name": "千兆交换机",
+                  "quantity": "10",
+                  "unit_price": "1299.00",
+                  "total_amount": "12990.00",
+                  "description": "24口企业级交换机"
+                }
+              },
+              {
+                "id": 87,
+                "line_number": 8,
+                "item_key": "ITEM-007",
+                "item_data": {
+                  "item_id": "ITEM-007",
+                  "item_name": "光纤模块",
+                  "quantity": "100",
+                  "unit_price": "399.00",
+                  "total_amount": "39900.00",
+                  "description": "新增：万兆多模 SFP+"
+                }
+              }
+            ]
+          }
+        ],
+        "precheck_results": [
+          {
+            "id": 331,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 332,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 333,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 334,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 335,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 336,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 337,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 338,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 339,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-007",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 340,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 341,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 342,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 343,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 344,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 345,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 346,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 347,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 348,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-005",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 349,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 350,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 351,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 352,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 353,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 354,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 355,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 356,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 357,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-004",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 358,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 359,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 360,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 361,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 362,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 363,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 364,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 365,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 366,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-003",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 367,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 368,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 369,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 370,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 371,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 372,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 373,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 374,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 375,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-006",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 376,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 377,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 378,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 379,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 380,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 381,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 382,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 383,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 384,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-002",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 385,
+            "check_code": "REQ_ITEM_ID",
+            "check_name": "规则校验-REQ_ITEM_ID",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 386,
+            "check_code": "REQ_ITEM_NAME",
+            "check_name": "规则校验-REQ_ITEM_NAME",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 387,
+            "check_code": "REQ_QUANTITY",
+            "check_name": "规则校验-REQ_QUANTITY",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 388,
+            "check_code": "REQ_UNIT_PRICE",
+            "check_name": "规则校验-REQ_UNIT_PRICE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 389,
+            "check_code": "TYPE_QUANTITY_INT",
+            "check_name": "规则校验-TYPE_QUANTITY_INT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 390,
+            "check_code": "TYPE_PRICE_POSITIVE",
+            "check_name": "规则校验-TYPE_PRICE_POSITIVE",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 391,
+            "check_code": "RANGE_QUANTITY",
+            "check_name": "规则校验-RANGE_QUANTITY",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 392,
+            "check_code": "FORMAT_ITEM_ID",
+            "check_name": "规则校验-FORMAT_ITEM_ID",
+            "severity": "warning",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 393,
+            "check_code": "CALC_TOTAL_AMOUNT",
+            "check_name": "规则校验-CALC_TOTAL_AMOUNT",
+            "severity": "error",
+            "passed": true,
+            "message": "校验通过",
+            "suggestion": null,
+            "details": null,
+            "affected_version_number": 2,
+            "affected_item_key": "ITEM-001",
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 394,
+            "check_code": "BATCH_CODE_CONFLICT",
+            "check_name": "批次编码冲突检查",
+            "severity": "warning",
+            "passed": false,
+            "message": "已存在相同 batch_code 的批次 (id=262, status=archived)，确认恢复时将覆盖现有批次",
+            "suggestion": "请确认是否要覆盖现有批次。覆盖将删除现有批次的所有数据并替换为沙盒中的内容。",
+            "details": {
+              "existing_batch_id": 262,
+              "existing_status": "archived"
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 395,
+            "check_code": "HAS_CHANGES",
+            "check_name": "内容变更检查",
+            "severity": "info",
+            "passed": true,
+            "message": "检测到 5 项内容变更 (新增 2，删除 0，修改 3)",
+            "suggestion": "请在差异视图中仔细核对所有变更内容。",
+            "details": {
+              "base_version": 1,
+              "candidate_version": 2,
+              "added_count": 2,
+              "removed_count": 0,
+              "modified_count": 3
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          },
+          {
+            "id": 396,
+            "check_code": "CONTENT_HASH_VALID",
+            "check_name": "内容哈希完整性",
+            "severity": "info",
+            "passed": true,
+            "message": "候选版本内容哈希校验通过: 12ea21fcedac5628...",
+            "suggestion": null,
+            "details": {
+              "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d"
+            },
+            "affected_version_number": 2,
+            "affected_item_key": null,
+            "created_at": "2026-06-17T04:04:35"
+          }
+        ]
+      }
+    },
+    {
+      "step": "sandbox_audit_logs",
+      "status_code": 200,
+      "body": [
+        {
+          "id": 2416,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_RESTORE",
+          "actor_id": 2,
+          "actor_username": "lead_wang",
+          "actor_display_name": "王组长",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "恢复归档包到沙盒: archive_id=47e5d72903c68fed3b315c35, batch_code=REVIEW-SB-1781669075, sandbox_token=m7IwtjqUg5Zj-TZo...",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "archive_id": "47e5d72903c68fed3b315c35",
+            "batch_code": "REVIEW-SB-1781669075",
+            "original_batch_id": 262,
+            "restored_version_count": 1,
+            "expires_at": "2026-06-18T04:04:35.740108",
+            "hash_verified": true
+          }
+        },
+        {
+          "id": 2417,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_IMPORT",
+          "actor_id": 2,
+          "actor_username": "lead_wang",
+          "actor_display_name": "王组长",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "沙盒内导入候选版本 v2: session=m7IwtjqUg5Zj-TZo..., items=7",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "version_number": 2,
+            "base_version_number": 1,
+            "item_count": 7,
+            "import_format": "csv",
+            "content_hash": "12ea21fcedac5628f0cfa52c25b1d26e29b9b470e72d1b2328d25e79c2b1ee5d",
+            "parse_error_count": 0
+          }
+        },
+        {
+          "id": 2418,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_VIEW_DIFF",
+          "actor_id": 2,
+          "actor_username": "lead_wang",
+          "actor_display_name": "王组长",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "查看沙盒差异: v1 -> v2, session=m7IwtjqUg5Zj-TZo...",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "base_version": 1,
+            "candidate_version": 2,
+            "added_count": 2,
+            "removed_count": 0,
+            "modified_count": 3
+          }
+        },
+        {
+          "id": 2419,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_VIEW_DIFF",
+          "actor_id": 3,
+          "actor_username": "reviewer_li",
+          "actor_display_name": "李评审",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "查看沙盒差异: v1 -> v2, session=m7IwtjqUg5Zj-TZo...",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "base_version": 1,
+            "candidate_version": 2,
+            "added_count": 2,
+            "removed_count": 0,
+            "modified_count": 3
+          }
+        },
+        {
+          "id": 2420,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_PRECHECK",
+          "actor_id": 2,
+          "actor_username": "lead_wang",
+          "actor_display_name": "王组长",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "沙盒预检查完成: WARNING, session=m7IwtjqUg5Zj-TZo..., passed=65, warnings=1, failed=0, recommend=MANUAL_REVIEW",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "candidate_version": 2,
+            "overall_result": "WARNING",
+            "precheck_passed": true,
+            "recommended_action": "MANUAL_REVIEW",
+            "total_checks": 66,
+            "passed_checks": 65,
+            "warning_checks": 1,
+            "failed_checks": 0,
+            "conflict_types": [
+              "BATCH_CODE_CONFLICT"
+            ]
+          }
+        },
+        {
+          "id": 2421,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_CONFIRM",
+          "actor_id": 1,
+          "actor_username": "admin",
+          "actor_display_name": "系统管理员",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "确认沙盒恢复到正式环境: batch_code=REVIEW-SB-1781669075, sandbox_token=m7IwtjqUg5Zj-TZo...，备注: admin confirms sandbox restore",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "source_archive_id": "47e5d72903c68fed3b315c35",
+            "batch_code": "REVIEW-SB-1781669075",
+            "new_batch_id": 262,
+            "overwritten_batch_id": 262,
+            "restored_version_count": 2,
+            "candidate_version": 2,
+            "comment": "admin confirms sandbox restore"
+          }
+        },
+        {
+          "id": 2422,
+          "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+          "action": "SANDBOX_RESTORE",
+          "actor_id": 2,
+          "actor_username": "lead_wang",
+          "actor_display_name": "王组长",
+          "created_at": "2026-06-17T04:04:35",
+          "comment": "[来源沙盒] 原始恢复操作: archive_id=47e5d72903c68fed3b315c35, created_by=2",
+          "extra_data": {
+            "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+            "sandbox_session_id": 9,
+            "source_archive_id": "47e5d72903c68fed3b315c35",
+            "is_sandbox_source": true
+          }
+        }
+      ]
+    },
+    {
+      "step": "restored_batch_detail",
+      "status_code": 200,
+      "body": {
+        "id": 262,
+        "batch_code": "REVIEW-SB-1781669075",
+        "name": "REVIEW-SB-1781669075 (从沙盒恢复)",
+        "description": "从沙盒恢复，来源 archive_id=47e5d72903c68fed3b315c35",
+        "status": "draft",
+        "submitter_id": 1,
+        "current_manifest_version_id": 381,
+        "created_at": "2026-06-17T04:04:35",
+        "updated_at": "2026-06-17T04:04:35",
+        "archived_at": null,
+        "archived_by": null
+      }
+    },
+    {
+      "step": "restored_batch_versions",
+      "status_code": 200,
+      "body": [
+        {
+          "id": 380,
+          "batch_id": 262,
+          "version_number": 1,
+          "import_format": "csv",
+          "imported_by": 5,
+          "imported_at": "2026-06-17T04:04:35",
+          "item_count": 5,
+          "validation_status": "passed",
+          "validation_summary": {
+            "total_rules": 9,
+            "total_items": 5,
+            "total_checks": 45,
+            "passed": 45,
+            "failed": 0,
+            "warnings": 0,
+            "validation_passed": true,
+            "failed_items_count": 0,
+            "warning_items_count": 0
+          },
+          "items": [
+            {
+              "id": 1446,
+              "manifest_version_id": 380,
+              "line_number": 2,
+              "item_key": "ITEM-001",
+              "item_data": {
+                "item_id": "ITEM-001",
+                "item_name": "高性能服务器主板",
+                "quantity": "50",
+                "unit_price": "1299.00",
+                "total_amount": "64950.00",
+                "description": "企业级服务器专用主板"
+              }
+            },
+            {
+              "id": 1447,
+              "manifest_version_id": 380,
+              "line_number": 3,
+              "item_key": "ITEM-002",
+              "item_data": {
+                "item_id": "ITEM-002",
+                "item_name": "16GB DDR4内存条",
+                "quantity": "200",
+                "unit_price": "299.50",
+                "total_amount": "59900.00",
+                "description": "服务器内存条"
+              }
+            },
+            {
+              "id": 1448,
+              "manifest_version_id": 380,
+              "line_number": 4,
+              "item_key": "ITEM-003",
+              "item_data": {
+                "item_id": "ITEM-003",
+                "item_name": "1TB NVMe SSD",
+                "quantity": "100",
+                "unit_price": "699.00",
+                "total_amount": "69900.00",
+                "description": "高速固态硬盘"
+              }
+            },
+            {
+              "id": 1449,
+              "manifest_version_id": 380,
+              "line_number": 5,
+              "item_key": "ITEM-004",
+              "item_data": {
+                "item_id": "ITEM-004",
+                "item_name": "80PLUS金牌电源",
+                "quantity": "30",
+                "unit_price": "599.00",
+                "total_amount": "17970.00",
+                "description": "650W台式机电源"
+              }
+            },
+            {
+              "id": 1450,
+              "manifest_version_id": 380,
+              "line_number": 6,
+              "item_key": "ITEM-005",
+              "item_data": {
+                "item_id": "ITEM-005",
+                "item_name": "千兆交换机",
+                "quantity": "10",
+                "unit_price": "1299.00",
+                "total_amount": "12990.00",
+                "description": "24口企业级交换机"
+              }
+            }
+          ]
+        },
+        {
+          "id": 381,
+          "batch_id": 262,
+          "version_number": 2,
+          "import_format": "csv",
+          "imported_by": 2,
+          "imported_at": "2026-06-17T04:04:35",
+          "item_count": 7,
+          "validation_status": "passed",
+          "validation_summary": {
+            "total_rules": 9,
+            "total_items": 7,
+            "total_checks": 63,
+            "passed": 63,
+            "failed": 0,
+            "warnings": 0,
+            "validation_passed": true,
+            "failed_items_count": 0,
+            "warning_items_count": 0
+          },
+          "items": [
+            {
+              "id": 1451,
+              "manifest_version_id": 381,
+              "line_number": 2,
+              "item_key": "ITEM-001",
+              "item_data": {
+                "item_id": "ITEM-001",
+                "item_name": "高性能服务器主板 REV.B",
+                "quantity": "50",
+                "unit_price": "1299.00",
+                "total_amount": "64950.00",
+                "description": "企业级服务器专用主板 - 修复 BIOS 兼容性问题"
+              }
+            },
+            {
+              "id": 1452,
+              "manifest_version_id": 381,
+              "line_number": 3,
+              "item_key": "ITEM-002",
+              "item_data": {
+                "item_id": "ITEM-002",
+                "item_name": "16GB DDR4内存条",
+                "quantity": "200",
+                "unit_price": "299.50",
+                "total_amount": "59900.00",
+                "description": "服务器内存条 - ECC校验"
+              }
+            },
+            {
+              "id": 1453,
+              "manifest_version_id": 381,
+              "line_number": 4,
+              "item_key": "ITEM-006",
+              "item_data": {
+                "item_id": "ITEM-006",
+                "item_name": "企业级 RAID 卡",
+                "quantity": "25",
+                "unit_price": "1899.00",
+                "total_amount": "47475.00",
+                "description": "新增：支持 RAID 0/1/5/10"
+              }
+            },
+            {
+              "id": 1454,
+              "manifest_version_id": 381,
+              "line_number": 5,
+              "item_key": "ITEM-003",
+              "item_data": {
+                "item_id": "ITEM-003",
+                "item_name": "1TB NVMe SSD",
+                "quantity": "100",
+                "unit_price": "699.00",
+                "total_amount": "69900.00",
+                "description": "高速固态硬盘 - 散热片升级"
+              }
+            },
+            {
+              "id": 1455,
+              "manifest_version_id": 381,
+              "line_number": 6,
+              "item_key": "ITEM-004",
+              "item_data": {
+                "item_id": "ITEM-004",
+                "item_name": "80PLUS金牌电源",
+                "quantity": "30",
+                "unit_price": "599.00",
+                "total_amount": "17970.00",
+                "description": "650W台式机电源"
+              }
+            },
+            {
+              "id": 1456,
+              "manifest_version_id": 381,
+              "line_number": 7,
+              "item_key": "ITEM-005",
+              "item_data": {
+                "item_id": "ITEM-005",
+                "item_name": "千兆交换机",
+                "quantity": "10",
+                "unit_price": "1299.00",
+                "total_amount": "12990.00",
+                "description": "24口企业级交换机"
+              }
+            },
+            {
+              "id": 1457,
+              "manifest_version_id": 381,
+              "line_number": 8,
+              "item_key": "ITEM-007",
+              "item_data": {
+                "item_id": "ITEM-007",
+                "item_name": "光纤模块",
+                "quantity": "100",
+                "unit_price": "399.00",
+                "total_amount": "39900.00",
+                "description": "新增：万兆多模 SFP+"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "step": "list_system_configs",
+      "status_code": 200,
+      "body": [
+        {
+          "id": 2,
+          "config_key": "archive.allow_overwrite_existing_batch",
+          "config_value": "true",
+          "value_type": "bool",
+          "description": "导入归档包时，是否允许覆盖已存在相同 batch_code 的批次",
+          "updated_by": 1,
+          "created_at": "2026-06-17T02:26:18",
+          "updated_at": "2026-06-17T03:06:14"
+        },
+        {
+          "id": 1,
+          "config_key": "archive.enabled",
+          "config_value": "true",
+          "value_type": "bool",
+          "description": "是否启用验收归档包功能（导出/导入）",
+          "updated_by": 1,
+          "created_at": "2026-06-17T02:26:18",
+          "updated_at": "2026-06-17T02:36:53"
+        },
+        {
+          "id": 5,
+          "config_key": "sandbox.auto_expire_hours",
+          "config_value": "24",
+          "value_type": "int",
+          "description": "沙盒会话自动过期时间（小时）",
+          "updated_by": null,
+          "created_at": "2026-06-17T03:38:19",
+          "updated_at": "2026-06-17T03:38:19"
+        },
+        {
+          "id": 3,
+          "config_key": "sandbox.enabled",
+          "config_value": "true",
+          "value_type": "bool",
+          "description": "是否启用恢复后验收沙盒功能",
+          "updated_by": null,
+          "created_at": "2026-06-17T03:38:19",
+          "updated_at": "2026-06-17T03:38:19"
+        },
+        {
+          "id": 4,
+          "config_key": "sandbox.require_admin_confirm",
+          "config_value": "true",
+          "value_type": "bool",
+          "description": "沙盒正式确认是否需要 admin 权限（否则 lead 也可确认）",
+          "updated_by": null,
+          "created_at": "2026-06-17T03:38:19",
+          "updated_at": "2026-06-17T03:38:19"
+        }
+      ]
+    },
+    {
+      "step": "update_sandbox_enabled_config",
+      "status_code": 400,
+      "body": {
+        "success": false,
+        "error": {
+          "type": "HTTPException",
+          "code": 400,
+          "message": "不允许修改配置项 sandbox.enabled。允许修改的配置: ['archive.enabled', 'archive.allow_overwrite_existing_batch']"
+        }
+      }
+    }
+  ],
+  "batch_id": 262,
+  "batch_code": "REVIEW-SB-1781669075",
+  "archive_headers": {
+    "content-type": "application/zip"
+  },
+  "sandbox_token": "m7IwtjqUg5Zj-TZoyt3Dgl49T2VJz7krrVLhXL_-_fY",
+  "sandbox_session_id": 9,
+  "restored_batch_id": 262
+}

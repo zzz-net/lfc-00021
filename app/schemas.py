@@ -615,3 +615,220 @@ class SystemConfigResponse(BaseModel):
 class SystemConfigUpdateRequest(BaseModel):
     config_value: str
     value_type: Optional[str] = None
+
+
+SANDBOX_STATUS_PENDING = "pending"
+SANDBOX_STATUS_PRECHECK_RUNNING = "precheck_running"
+SANDBOX_STATUS_PRECHECK_PASSED = "precheck_passed"
+SANDBOX_STATUS_PRECHECK_FAILED = "precheck_failed"
+SANDBOX_STATUS_CONFIRMED = "confirmed"
+SANDBOX_STATUS_REJECTED = "rejected"
+SANDBOX_STATUS_EXPIRED = "expired"
+
+SANDBOX_PRECHECK_PASS = "PASS"
+SANDBOX_PRECHECK_WARNING = "WARNING"
+SANDBOX_PRECHECK_FAIL = "FAIL"
+
+SANDBOX_ACTION_RECOMMEND_APPROVE = "APPROVE"
+SANDBOX_ACTION_RECOMMEND_REJECT = "REJECT"
+SANDBOX_ACTION_RECOMMEND_REPAIR = "REPAIR"
+SANDBOX_ACTION_RECOMMEND_MANUAL = "MANUAL_REVIEW"
+
+
+class SandboxItemResponse(BaseModel):
+    id: int
+    line_number: int
+    item_key: str
+    item_data: Dict[str, Any]
+
+    class Config:
+        from_attributes = True
+
+
+class SandboxVersionResponse(BaseModel):
+    id: int
+    sandbox_session_id: int
+    version_number: int
+    import_format: str
+    imported_by: int
+    imported_at: datetime
+    item_count: int
+    content_hash: str
+    validation_status: str
+    validation_summary: Optional[Dict[str, Any]] = None
+    is_candidate: bool
+    base_version_number: Optional[int] = None
+    items: List[SandboxItemResponse] = []
+
+    class Config:
+        from_attributes = True
+
+
+class SandboxPrecheckItem(BaseModel):
+    id: int
+    check_code: str
+    check_name: str
+    severity: str
+    passed: bool
+    message: str
+    suggestion: Optional[str] = None
+    details: Optional[Dict[str, Any]] = None
+    affected_version_number: Optional[int] = None
+    affected_item_key: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SandboxSessionResponse(BaseModel):
+    id: int
+    sandbox_token: str
+    source_archive_id: str
+    source_batch_code: str
+    original_batch_id: Optional[int] = None
+    target_batch_id: Optional[int] = None
+    status: str
+    created_by: int
+    created_at: datetime
+    expires_at: datetime
+    confirmed_by: Optional[int] = None
+    confirmed_at: Optional[datetime] = None
+    rejected_by: Optional[int] = None
+    rejected_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    precheck_passed: Optional[bool] = None
+    recommended_action: Optional[str] = None
+    conflict_types: Optional[List[str]] = None
+    extra_data: Optional[Dict[str, Any]] = None
+    manifest_versions: List[SandboxVersionResponse] = []
+    precheck_results: List[SandboxPrecheckItem] = []
+
+    class Config:
+        from_attributes = True
+
+
+class SandboxSessionListResponse(BaseModel):
+    id: int
+    sandbox_token: str
+    source_archive_id: str
+    source_batch_code: str
+    original_batch_id: Optional[int] = None
+    target_batch_id: Optional[int] = None
+    status: str
+    created_by: int
+    created_at: datetime
+    expires_at: datetime
+    confirmed_by: Optional[int] = None
+    precheck_passed: Optional[bool] = None
+    recommended_action: Optional[str] = None
+    version_count: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class SandboxRestoreRequest(BaseModel):
+    pass
+
+
+class SandboxRestoreResponse(BaseModel):
+    success: bool
+    sandbox_token: Optional[str] = None
+    session_id: Optional[int] = None
+    source_archive_id: Optional[str] = None
+    source_batch_code: Optional[str] = None
+    status: Optional[str] = None
+    message: str
+    restored_version_count: int = 0
+    conflicts: List[ArchiveImportConflict] = []
+    info: Optional[Dict[str, Any]] = None
+
+
+class SandboxImportResponse(BaseModel):
+    success: bool
+    sandbox_token: str
+    session_id: int
+    version_number: Optional[int] = None
+    item_count: int = 0
+    content_hash: Optional[str] = None
+    message: str
+    parse_errors: List[ImportValidationError] = []
+
+
+class SandboxDiffResponse(BaseModel):
+    success: bool
+    sandbox_token: str
+    base_version_number: int
+    candidate_version_number: int
+    metadata: VersionDiffMetadata
+    summary: VersionDiffSummary
+    added_items: List[ItemDiff] = []
+    removed_items: List[ItemDiff] = []
+    modified_items: List[ItemDiff] = []
+    unchanged_items: List[ItemDiffSummary] = []
+    validation_changes: List[ValidationChange] = []
+    message: str
+
+
+class SandboxPrecheckResponse(BaseModel):
+    success: bool
+    sandbox_token: str
+    session_id: int
+    overall_result: str
+    passed: bool
+    recommended_action: str
+    precheck_passed: bool
+    total_checks: int
+    passed_checks: int
+    warning_checks: int
+    failed_checks: int
+    results: List[SandboxPrecheckItem] = []
+    conflict_types: List[str] = []
+    reasons: List[str] = []
+    message: str
+
+
+class SandboxConfirmRequest(BaseModel):
+    comment: Optional[str] = None
+
+
+class SandboxConfirmResponse(BaseModel):
+    success: bool
+    sandbox_token: str
+    session_id: int
+    status: str
+    target_batch_id: Optional[int] = None
+    target_batch_code: Optional[str] = None
+    confirmed_by: Optional[int] = None
+    confirmed_at: Optional[datetime] = None
+    restored_version_count: int = 0
+    message: str
+
+
+class SandboxRejectRequest(BaseModel):
+    reason: str
+    comment: Optional[str] = None
+
+
+class SandboxRejectResponse(BaseModel):
+    success: bool
+    sandbox_token: str
+    session_id: int
+    status: str
+    rejected_by: Optional[int] = None
+    rejected_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    message: str
+
+
+class SandboxAuditLogResponse(BaseModel):
+    id: int
+    sandbox_token: str
+    action: str
+    actor_id: int
+    actor_username: str
+    actor_display_name: Optional[str] = None
+    created_at: datetime
+    comment: Optional[str] = None
+    extra_data: Optional[Dict[str, Any]] = None

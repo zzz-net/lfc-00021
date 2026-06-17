@@ -227,6 +227,35 @@ CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE = "archive.allow_overwrite_existing_batch"
 CONFIG_KEY_ARCHIVE_ENABLED = "archive.enabled"
 CONFIG_KEY_ARCHIVE_ROLE_REQUIRED = "archive.role_required"
 
+CONFIG_KEY_SANDBOX_ENABLED = "sandbox.enabled"
+CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM = "sandbox.require_admin_confirm"
+CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS = "sandbox.auto_expire_hours"
+
+SANDBOX_STATUS_PENDING = "pending"
+SANDBOX_STATUS_PRECHECK_RUNNING = "precheck_running"
+SANDBOX_STATUS_PRECHECK_PASSED = "precheck_passed"
+SANDBOX_STATUS_PRECHECK_FAILED = "precheck_failed"
+SANDBOX_STATUS_CONFIRMED = "confirmed"
+SANDBOX_STATUS_REJECTED = "rejected"
+SANDBOX_STATUS_EXPIRED = "expired"
+
+SANDBOX_PRECHECK_PASS = "PASS"
+SANDBOX_PRECHECK_WARNING = "WARNING"
+SANDBOX_PRECHECK_FAIL = "FAIL"
+
+SANDBOX_ACTION_RECOMMEND_APPROVE = "APPROVE"
+SANDBOX_ACTION_RECOMMEND_REJECT = "REJECT"
+SANDBOX_ACTION_RECOMMEND_REPAIR = "REPAIR"
+SANDBOX_ACTION_RECOMMEND_MANUAL = "MANUAL_REVIEW"
+
+APPROVAL_LOG_ACTION_SANDBOX_RESTORE = "SANDBOX_RESTORE"
+APPROVAL_LOG_ACTION_SANDBOX_IMPORT = "SANDBOX_IMPORT"
+APPROVAL_LOG_ACTION_SANDBOX_PRECHECK = "SANDBOX_PRECHECK"
+APPROVAL_LOG_ACTION_SANDBOX_VIEW_DIFF = "SANDBOX_VIEW_DIFF"
+APPROVAL_LOG_ACTION_SANDBOX_CONFIRM = "SANDBOX_CONFIRM"
+APPROVAL_LOG_ACTION_SANDBOX_REJECT = "SANDBOX_REJECT"
+APPROVAL_LOG_ACTION_SANDBOX_CLEANUP = "SANDBOX_CLEANUP"
+
 APPROVAL_LOG_ACTION_EXPORT_ARCHIVE = "EXPORT_ARCHIVE"
 APPROVAL_LOG_ACTION_TRY_IMPORT_ARCHIVE = "TRY_IMPORT_ARCHIVE"
 APPROVAL_LOG_ACTION_RESTORE_ARCHIVE = "RESTORE_ARCHIVE"
@@ -244,3 +273,88 @@ class SystemConfig(Base):
     updated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+
+class SandboxSession(Base):
+    __tablename__ = "sandbox_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sandbox_token = Column(String(64), unique=True, nullable=False, index=True)
+    source_archive_id = Column(String(64), nullable=False, index=True)
+    source_batch_code = Column(String(50), nullable=False, index=True)
+    original_batch_id = Column(Integer, nullable=True)
+    target_batch_id = Column(Integer, ForeignKey("delivery_batches.id"), nullable=True)
+    status = Column(String(30), nullable=False, default=SANDBOX_STATUS_PENDING)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    confirmed_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    confirmed_at = Column(DateTime(timezone=True), nullable=True)
+    rejected_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    rejected_at = Column(DateTime(timezone=True), nullable=True)
+    rejection_reason = Column(Text, nullable=True)
+    precheck_result = Column(JSON, nullable=True)
+    precheck_passed = Column(Boolean, nullable=True)
+    recommended_action = Column(String(30), nullable=True)
+    conflict_types = Column(JSON, nullable=True)
+    extra_data = Column(JSON, nullable=True)
+
+    target_batch = relationship("DeliveryBatch", foreign_keys=[target_batch_id])
+    creator = relationship("User", foreign_keys=[created_by])
+    confirmer = relationship("User", foreign_keys=[confirmed_by])
+    rejector = relationship("User", foreign_keys=[rejected_by])
+    manifest_versions = relationship("SandboxManifestVersion", back_populates="sandbox_session", cascade="all, delete-orphan")
+
+
+class SandboxManifestVersion(Base):
+    __tablename__ = "sandbox_manifest_versions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sandbox_session_id = Column(Integer, ForeignKey("sandbox_sessions.id"), nullable=False, index=True)
+    version_number = Column(Integer, nullable=False, default=1)
+    import_format = Column(String(10), nullable=False)
+    imported_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    imported_at = Column(DateTime(timezone=True), server_default=func.now())
+    item_count = Column(Integer, nullable=False, default=0)
+    raw_content = Column(Text, nullable=False)
+    content_hash = Column(String(64), nullable=False)
+    validation_status = Column(String(20), nullable=False, default="pending")
+    validation_summary = Column(JSON, nullable=True)
+    is_candidate = Column(Boolean, nullable=False, default=False)
+    base_version_number = Column(Integer, nullable=True)
+    extra_data = Column(JSON, nullable=True)
+
+    sandbox_session = relationship("SandboxSession", back_populates="manifest_versions")
+    items = relationship("SandboxManifestItem", back_populates="manifest_version", cascade="all, delete-orphan")
+    import_user = relationship("User", foreign_keys=[imported_by])
+
+
+class SandboxManifestItem(Base):
+    __tablename__ = "sandbox_manifest_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sandbox_manifest_version_id = Column(Integer, ForeignKey("sandbox_manifest_versions.id"), nullable=False, index=True)
+    line_number = Column(Integer, nullable=False)
+    item_key = Column(String(100), nullable=False, index=True)
+    item_data = Column(JSON, nullable=False)
+
+    manifest_version = relationship("SandboxManifestVersion", back_populates="items")
+
+
+class SandboxPrecheckResult(Base):
+    __tablename__ = "sandbox_precheck_results"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sandbox_session_id = Column(Integer, ForeignKey("sandbox_sessions.id"), nullable=False, index=True)
+    check_code = Column(String(50), nullable=False)
+    check_name = Column(String(200), nullable=False)
+    severity = Column(String(10), nullable=False)
+    passed = Column(Boolean, nullable=False)
+    message = Column(Text, nullable=False)
+    suggestion = Column(Text, nullable=True)
+    details = Column(JSON, nullable=True)
+    affected_version_number = Column(Integer, nullable=True)
+    affected_item_key = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    sandbox_session = relationship("SandboxSession")

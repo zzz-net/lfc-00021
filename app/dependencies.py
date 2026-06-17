@@ -1,11 +1,12 @@
 from fastapi import Header, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import User, DeliveryBatch
+from app.models import User, DeliveryBatch, CONFIG_KEY_SANDBOX_ENABLED, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM
 from app.schemas import (
     ROLE_ADMIN, ROLE_LEAD, ROLE_REVIEWER, ROLE_SUBMITTER,
     VALID_STATUS_TRANSITIONS
 )
+from app.archive_service import _get_config_bool
 
 
 def get_current_user(
@@ -106,3 +107,44 @@ def require_version_diff_access(
             f"batch submitter id: {batch.submitter_id}"
         )
     )
+
+
+def check_sandbox_enabled(db: Session = Depends(get_db)):
+    enabled = _get_config_bool(db, CONFIG_KEY_SANDBOX_ENABLED, True)
+    if not enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="系统配置已关闭恢复后验收沙盒功能"
+        )
+    return True
+
+
+def require_sandbox_confirm_permission(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> User:
+    require_admin = _get_config_bool(db, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, True)
+    if require_admin:
+        if current_user.role != ROLE_ADMIN:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"权限不足：系统配置要求只有 admin 角色才能执行沙盒确认/拒绝操作。您的角色: {current_user.role}"
+            )
+    else:
+        if current_user.role not in [ROLE_ADMIN, ROLE_LEAD]:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"权限不足：只有 admin 或 lead 角色才能执行沙盒确认/拒绝操作。您的角色: {current_user.role}"
+            )
+    return current_user
+
+
+def require_sandbox_view_permission(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    if current_user.role not in [ROLE_ADMIN, ROLE_LEAD, ROLE_REVIEWER]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"权限不足：只有 reviewer 及以上角色才能查看沙盒会话。您的角色: {current_user.role}"
+        )
+    return current_user
