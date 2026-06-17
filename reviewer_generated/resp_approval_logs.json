@@ -1,0 +1,204 @@
+﻿[
+    {
+        "id":  2179,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "CREATE",
+        "from_status":  null,
+        "to_status":  "draft",
+        "comment":  "åå»ºæ¹æ¬¡: Review Snapshot Batch",
+        "created_at":  "2026-06-17T01:36:59",
+        "extra_data":  null
+    },
+    {
+        "id":  2180,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "PRECHECK_IMPORT",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "å¯¼å\u0085¥é¢æ£æ¥[CONFLICT]ï¼è®¡å v1ï¼æ¡ç® 0ï¼å²çª 0ï¼ä¸å¯å¯¼å\u0085¥",
+        "created_at":  "2026-06-17T01:37:29",
+        "extra_data":  {
+                           "precheck_token":  "WO40OqR8k4sdczdR0sGgNVrUD1QX3R7H0oDQ1KDPQKQ",
+                           "action_type":  "CONFLICT",
+                           "has_conflict":  true,
+                           "conflict_types":  [
+
+                                              ],
+                           "can_import":  false,
+                           "item_count":  0,
+                           "content_hash":  "cf9f7c366900d3e72ed75b0d43aa7688c53bf55a57fb8628d86a3c5bb6598d9b",
+                           "expires_at":  "2026-06-17T02:07:29.086890"
+                       }
+    },
+    {
+        "id":  2181,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "PRECHECK_IMPORT",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "å¯¼å\u0085¥é¢æ£æ¥[NEW_VERSION]ï¼è®¡å v1ï¼æ¡ç® 2ï¼å²çª 0ï¼å¯å¯¼å\u0085¥",
+        "created_at":  "2026-06-17T01:38:07",
+        "extra_data":  {
+                           "precheck_token":  "8Cc9mIxAyTSXMmbzaJ9dzm00Fv18nJq3Gt5qGMDTD_0",
+                           "action_type":  "NEW_VERSION",
+                           "has_conflict":  false,
+                           "conflict_types":  [
+
+                                              ],
+                           "can_import":  true,
+                           "item_count":  2,
+                           "content_hash":  "26284c64121aa7a15e93c1660b7fd345274b11ab4775cfe96d3edef561d49c60",
+                           "expires_at":  "2026-06-17T02:08:07.793006"
+                       }
+    },
+    {
+        "id":  2182,
+        "batch_id":  248,
+        "manifest_version_id":  359,
+        "actor_id":  5,
+        "action":  "IMPORT_MANIFEST",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "å¯¼å\u0085¥æ¸\u0085å v1 (JSON), å\u0085± 2 æ¡è®°å½",
+        "created_at":  "2026-06-17T01:38:16",
+        "extra_data":  {
+                           "version_number":  1,
+                           "import_format":  "json",
+                           "item_count":  2,
+                           "precheck_token":  "8Cc9mIxAyTSXMmbzaJ9dzm00Fv18nJq3Gt5qGMDTD_0",
+                           "warnings":  [
+
+                                        ],
+                           "snapshot_id":  null
+                       }
+    },
+    {
+        "id":  2183,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "PRECHECK_IMPORT",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "å¯¼å\u0085¥é¢æ£æ¥[NEW_VERSION]ï¼è®¡å v2ï¼æ¡ç® 3ï¼å²çª 0ï¼å¯å¯¼å\u0085¥",
+        "created_at":  "2026-06-17T01:38:32",
+        "extra_data":  {
+                           "precheck_token":  "QVT93Dfub7-hW6vX_y1fji1mzSO-T-cXl_uYrAR98ss",
+                           "action_type":  "NEW_VERSION",
+                           "has_conflict":  false,
+                           "conflict_types":  [
+
+                                              ],
+                           "can_import":  true,
+                           "item_count":  3,
+                           "content_hash":  "c3407501f58a0e6302403e8d597b96d48818d47de5aa70d7ec24c68dcc62198e",
+                           "expires_at":  "2026-06-17T02:08:32.720309"
+                       }
+    },
+    {
+        "id":  2184,
+        "batch_id":  248,
+        "manifest_version_id":  360,
+        "actor_id":  5,
+        "action":  "CREATE_DIFF_SNAPSHOT",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "èªå¨åå»ºçæ¬å·®å¼å¿«ç\u0085§: v1 -\u003e v2",
+        "created_at":  "2026-06-17T01:38:40",
+        "extra_data":  {
+                           "snapshot_id":  51,
+                           "snapshot_key":  "batch_248_v1_to_v2",
+                           "old_version":  1,
+                           "new_version":  2,
+                           "content_hash":  "ca9131b00a3c40a4b6049d5771b2d5032478f5ba8569f3396b70ec5d1542ec00"
+                       }
+    },
+    {
+        "id":  2185,
+        "batch_id":  248,
+        "manifest_version_id":  360,
+        "actor_id":  5,
+        "action":  "IMPORT_MANIFEST",
+        "from_status":  "draft",
+        "to_status":  "draft",
+        "comment":  "å¯¼å\u0085¥æ¸\u0085å v2 (JSON), å\u0085± 3 æ¡è®°å½",
+        "created_at":  "2026-06-17T01:38:40",
+        "extra_data":  {
+                           "version_number":  2,
+                           "import_format":  "json",
+                           "item_count":  3,
+                           "precheck_token":  "QVT93Dfub7-hW6vX_y1fji1mzSO-T-cXl_uYrAR98ss",
+                           "warnings":  [
+
+                                        ],
+                           "snapshot_id":  51
+                       }
+    },
+    {
+        "id":  2186,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "VIEW_VERSION_DIFF",
+        "from_status":  null,
+        "to_status":  null,
+        "comment":  "æ¥ççæ¬å·®å¼: v1 -\u003e v2",
+        "created_at":  "2026-06-17T01:39:00",
+        "extra_data":  {
+                           "old_version":  1,
+                           "new_version":  2,
+                           "from_snapshot":  true,
+                           "entry":  "version-diff",
+                           "snapshot_id":  51,
+                           "snapshot_key":  "batch_248_v1_to_v2",
+                           "snapshot_hash":  "a6b6bcb371b7efad"
+                       }
+    },
+    {
+        "id":  2187,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "QUERY_DIFF_SNAPSHOT",
+        "from_status":  null,
+        "to_status":  null,
+        "comment":  "æ¥è¯¢ææ°çæ¬å·®å¼å¿«ç\u0085§: v1 -\u003e v2",
+        "created_at":  "2026-06-17T01:39:00",
+        "extra_data":  {
+                           "snapshot_id":  51,
+                           "snapshot_key":  "batch_248_v1_to_v2",
+                           "snapshot_hash":  "a6b6bcb371b7efad",
+                           "old_version":  1,
+                           "new_version":  2,
+                           "entry":  "snap-latest"
+                       }
+    },
+    {
+        "id":  2188,
+        "batch_id":  248,
+        "manifest_version_id":  null,
+        "actor_id":  5,
+        "action":  "EXPORT_VERSION_DIFF",
+        "from_status":  null,
+        "to_status":  null,
+        "comment":  "å¯¼åºçæ¬å·®å¼: v1 -\u003e v2",
+        "created_at":  "2026-06-17T01:39:00",
+        "extra_data":  {
+                           "old_version":  1,
+                           "new_version":  2,
+                           "export_id":  "9be70716bac0e1c1",
+                           "format":  "json",
+                           "from_snapshot":  true,
+                           "entry":  "export-json",
+                           "snapshot_id":  51,
+                           "snapshot_key":  "batch_248_v1_to_v2",
+                           "snapshot_hash":  "a6b6bcb371b7efad"
+                       }
+    }
+]

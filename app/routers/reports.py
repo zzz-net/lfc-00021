@@ -32,7 +32,8 @@ from app.dependencies import get_current_user, get_batch_or_404, require_lead, r
 from app.diff_engine import (
     calculate_version_diff, save_diff_snapshot,
     get_snapshot_by_versions, get_latest_snapshot, list_snapshots,
-    snapshot_to_diff_response, _is_snapshot_stale, refresh_snapshot
+    snapshot_to_diff_response, _is_snapshot_stale, refresh_snapshot,
+    get_or_compute_diff as _engine_get_or_compute_diff
 )
 
 router = APIRouter(prefix="/api", tags=["报告与历史查询"])
@@ -408,31 +409,25 @@ def _snapshot_to_list_response(snap: VersionDiffSnapshot) -> dict:
     }
 
 
-def _ensure_snapshot_fresh(db: Session, snap, current_user: User):
+def _ensure_snapshot_fresh(db: Session, snap, current_user: User, trigger: str = "query"):
     if _is_snapshot_stale(db, snap):
         logger.info(
-            "Snapshot %s is stale, refreshing before query",
-            snap.snapshot_key
+            "[SNAP_QUERY:%s] Snapshot %s is STALE, refreshing before returning to caller...",
+            trigger, snap.snapshot_key
         )
-        snap = refresh_snapshot(db, snap, current_user)
+        snap = refresh_snapshot(db, snap, current_user, trigger=trigger)
         db.commit()
         db.refresh(snap)
         logger.info(
-            "Snapshot %s refreshed, new content_hash=%s...",
-            snap.snapshot_key, snap.content_hash[:16]
+            "[SNAP_QUERY:%s] Snapshot %s refreshed (committed), new content_hash=%s...",
+            trigger, snap.snapshot_key, snap.content_hash[:16]
+        )
+    else:
+        logger.debug(
+            "[SNAP_QUERY:%s] Snapshot %s is FRESH, reusing (hash=%s...).",
+            trigger, snap.snapshot_key, snap.content_hash[:16]
         )
     return snap
-
-
-def _get_or_compute_diff(
-    db: Session,
-    batch: DeliveryBatch,
-    old_version: ManifestVersion,
-    new_version: ManifestVersion,
-    current_user: User
-) -> tuple:
-    from app.diff_engine import get_or_compute_diff as _engine_get_or_compute
-    return _engine_get_or_compute(db, batch, old_version, new_version, current_user)
 
 
 @router.get("/batches/{batch_id}/version-diff", response_model=VersionDiffResponse)
@@ -447,16 +442,25 @@ def get_version_diff(
 
     old_ver, new_ver = _get_versions_for_diff(db, batch_id, old_version, new_version)
 
-    diff_result, from_snapshot, snap = _get_or_compute_diff(db, batch, old_ver, new_ver, current_user)
+    logger.info(
+        "[ENTRY:version-diff] batch_id=%d, v%d->v%d, user=%d",
+        batch_id, old_ver.version_number, new_ver.version_number, current_user.id
+    )
+
+    diff_result, from_snapshot, snap = _engine_get_or_compute_diff(
+        db, batch, old_ver, new_ver, current_user, auto_persist=True
+    )
 
     extra = {
         "old_version": old_ver.version_number,
         "new_version": new_ver.version_number,
         "from_snapshot": from_snapshot,
+        "entry": "version-diff",
     }
     if snap:
         extra["snapshot_id"] = snap.id
         extra["snapshot_key"] = snap.snapshot_key
+        extra["snapshot_hash"] = snap.content_hash[:16]
 
     _log_diff_action(
         db=db,
@@ -466,6 +470,20 @@ def get_version_diff(
         actor_id=current_user.id,
         action=APPROVAL_LOG_ACTION_VIEW_DIFF,
         extra_data=extra
+    )
+
+    logger.info(
+        "[ENTRY:version-diff] DONE batch_id=%d, from_snapshot=%s, snap_id=%s, "
+        "val_changes=%d (breakdown: new_violation=%d, resolved=%d, modified=%d, "
+        "new_passed=%d, removed_passed=%d, unchanged=%d)",
+        batch_id, from_snapshot, snap.id if snap else None,
+        diff_result.summary.validation_changes_total,
+        diff_result.summary.validation_changes_new_violation,
+        diff_result.summary.validation_changes_resolved,
+        diff_result.summary.validation_changes_modified,
+        diff_result.summary.validation_changes_new_passed,
+        diff_result.summary.validation_changes_removed_passed,
+        diff_result.summary.validation_changes_unchanged,
     )
 
     return diff_result
@@ -531,7 +549,12 @@ def get_latest_version_diff_snapshot(
             detail="该批次尚无有效版本差异快照。请先导入至少两个版本的清单。"
         )
 
-    snap = _ensure_snapshot_fresh(db, snap, current_user)
+    logger.info(
+        "[ENTRY:snap-latest] batch_id=%d, found snap_id=%d (%s), user=%d",
+        batch_id, snap.id, snap.snapshot_key, current_user.id
+    )
+
+    snap = _ensure_snapshot_fresh(db, snap, current_user, trigger="snap-latest")
     diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
@@ -542,12 +565,22 @@ def get_latest_version_diff_snapshot(
         extra_data={
             "snapshot_id": snap.id,
             "snapshot_key": snap.snapshot_key,
+            "snapshot_hash": snap.content_hash[:16],
             "old_version": snap.old_version_number,
             "new_version": snap.new_version_number,
+            "entry": "snap-latest",
         }
     )
     db.add(log)
     db.commit()
+
+    logger.info(
+        "[ENTRY:snap-latest] DONE batch_id=%d, snap_id=%d, val_changes=%d, "
+        "errors_new=%d, warnings_new=%d, unresolved=%d",
+        batch_id, snap.id, len(diff.validation_changes),
+        diff.summary.validation_errors_new, diff.summary.validation_warnings_new,
+        diff.summary.unresolved_rejections_new,
+    )
 
     base = _snapshot_to_list_response(snap)
     return VersionDiffSnapshotDetailResponse(
@@ -573,13 +606,28 @@ def get_snapshot_by_version_pair(
 
     snap = get_snapshot_by_versions(db, batch_id, old_version, new_version)
     if not snap:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail=f"未找到 v{old_version} -> v{new_version} 的有效快照。"
+        logger.info(
+            "[ENTRY:snap-by-versions] batch_id=%d, v%d->v%d: NO snapshot yet, "
+            "will compute+persist on-demand via version-diff path",
+            batch_id, old_version, new_version
         )
-
-    snap = _ensure_snapshot_fresh(db, snap, current_user)
-    diff = snapshot_to_diff_response(snap)
+        old_ver, new_ver = _get_versions_for_diff(db, batch_id, old_version, new_version)
+        diff_result, _, snap = _engine_get_or_compute_diff(
+            db, batch, old_ver, new_ver, current_user, auto_persist=True
+        )
+        if not snap:
+            raise HTTPException(
+                status_code=http_status.HTTP_404_NOT_FOUND,
+                detail=f"未找到 v{old_version} -> v{new_version} 的有效快照，且实时计算落库失败。"
+            )
+        diff = diff_result
+    else:
+        logger.info(
+            "[ENTRY:snap-by-versions] batch_id=%d, v%d->v%d: found snap_id=%d (%s), user=%d",
+            batch_id, old_version, new_version, snap.id, snap.snapshot_key, current_user.id
+        )
+        snap = _ensure_snapshot_fresh(db, snap, current_user, trigger="snap-by-versions")
+        diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
         batch_id=batch_id,
@@ -589,12 +637,19 @@ def get_snapshot_by_version_pair(
         extra_data={
             "snapshot_id": snap.id,
             "snapshot_key": snap.snapshot_key,
+            "snapshot_hash": snap.content_hash[:16],
             "old_version": old_version,
             "new_version": new_version,
+            "entry": "snap-by-versions",
         }
     )
     db.add(log)
     db.commit()
+
+    logger.info(
+        "[ENTRY:snap-by-versions] DONE batch_id=%d, snap_id=%d, val_changes=%d",
+        batch_id, snap.id, len(diff.validation_changes)
+    )
 
     base = _snapshot_to_list_response(snap)
     return VersionDiffSnapshotDetailResponse(
@@ -627,7 +682,12 @@ def get_snapshot_by_id(
             detail=f"快照 ID {snapshot_id} 不存在或不属于该批次"
         )
 
-    snap = _ensure_snapshot_fresh(db, snap, current_user)
+    logger.info(
+        "[ENTRY:snap-by-id] batch_id=%d, snap_id=%d (%s), user=%d",
+        batch_id, snap.id, snap.snapshot_key, current_user.id
+    )
+
+    snap = _ensure_snapshot_fresh(db, snap, current_user, trigger="snap-by-id")
     diff = snapshot_to_diff_response(snap)
 
     log = ApprovalLog(
@@ -638,12 +698,19 @@ def get_snapshot_by_id(
         extra_data={
             "snapshot_id": snap.id,
             "snapshot_key": snap.snapshot_key,
+            "snapshot_hash": snap.content_hash[:16],
             "old_version": snap.old_version_number,
             "new_version": snap.new_version_number,
+            "entry": "snap-by-id",
         }
     )
     db.add(log)
     db.commit()
+
+    logger.info(
+        "[ENTRY:snap-by-id] DONE batch_id=%d, snap_id=%d, val_changes=%d",
+        batch_id, snap.id, len(diff.validation_changes)
+    )
 
     base = _snapshot_to_list_response(snap)
     return VersionDiffSnapshotDetailResponse(
@@ -785,7 +852,15 @@ def export_version_diff(
 
     old_ver, new_ver = _get_versions_for_diff(db, batch_id, old_version, new_version)
 
-    diff_result, from_snapshot, snap = _get_or_compute_diff(db, batch, old_ver, new_ver, current_user)
+    logger.info(
+        "[ENTRY:export-%s] batch_id=%d, v%d->v%d, user=%d, format=%s",
+        format_lower, batch_id, old_ver.version_number, new_ver.version_number,
+        current_user.id, format_lower
+    )
+
+    diff_result, from_snapshot, snap = _engine_get_or_compute_diff(
+        db, batch, old_ver, new_ver, current_user, auto_persist=True
+    )
 
     export_id_parts = [
         str(batch_id),
@@ -795,6 +870,8 @@ def export_version_diff(
         str(new_ver.id),
         str(batch.batch_code),
         format_lower,
+        str(snap.id if snap else 0),
+        str(snap.content_hash if snap else "no-snapshot"),
     ]
     export_id = hashlib.sha256("|".join(export_id_parts).encode()).hexdigest()[:16]
 
@@ -804,10 +881,12 @@ def export_version_diff(
         "export_id": export_id,
         "format": format_lower,
         "from_snapshot": from_snapshot,
+        "entry": f"export-{format_lower}",
     }
     if snap:
         extra["snapshot_id"] = snap.id
         extra["snapshot_key"] = snap.snapshot_key
+        extra["snapshot_hash"] = snap.content_hash[:16]
 
     action_type = APPROVAL_LOG_ACTION_EXPORT_SNAPSHOT_CSV if format_lower == "csv" else APPROVAL_LOG_ACTION_EXPORT_DIFF
     _log_diff_action(
@@ -818,6 +897,15 @@ def export_version_diff(
         actor_id=current_user.id,
         action=action_type,
         extra_data=extra
+    )
+
+    logger.info(
+        "[ENTRY:export-%s] DONE batch_id=%d, from_snapshot=%s, snap_id=%s, "
+        "export_id=%s, val_changes=%d, added=%d, removed=%d, modified=%d, unchanged=%d",
+        format_lower, batch_id, from_snapshot, snap.id if snap else None,
+        export_id, diff_result.summary.validation_changes_total,
+        diff_result.summary.added_count, diff_result.summary.removed_count,
+        diff_result.summary.modified_count, diff_result.summary.unchanged_count,
     )
 
     if format_lower == "json":

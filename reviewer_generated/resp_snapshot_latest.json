@@ -1,0 +1,500 @@
+﻿{
+    "id":  51,
+    "batch_id":  248,
+    "old_version_id":  359,
+    "new_version_id":  360,
+    "old_version_number":  1,
+    "new_version_number":  2,
+    "snapshot_key":  "batch_248_v1_to_v2",
+    "status":  "valid",
+    "created_by":  5,
+    "created_at":  "2026-06-17T01:38:40",
+    "invalidated_at":  null,
+    "invalidated_by":  null,
+    "content_hash":  "a6b6bcb371b7efadf227737bb273a17cc62055592b0fd1109a252a1c052de4f2",
+    "metadata":  {
+                     "batch_id":  248,
+                     "batch_code":  "REV-20260617-001",
+                     "batch_name":  "Review Snapshot Batch",
+                     "old_version":  1,
+                     "new_version":  2,
+                     "old_import":  {
+                                        "version_number":  1,
+                                        "imported_by_username":  "submitter_chen",
+                                        "imported_by_display_name":  "éäº¤ä»",
+                                        "imported_at":  "2026-06-17T01:38:16",
+                                        "item_count":  2,
+                                        "import_format":  "json"
+                                    },
+                     "new_import":  {
+                                        "version_number":  2,
+                                        "imported_by_username":  "submitter_chen",
+                                        "imported_by_display_name":  "éäº¤ä»",
+                                        "imported_at":  "2026-06-17T01:38:40",
+                                        "item_count":  3,
+                                        "import_format":  "json"
+                                    },
+                     "generated_at":  "2026-06-17T09:38:40.377509",
+                     "generated_by_username":  "submitter_chen",
+                     "generated_by_display_name":  "éäº¤ä»"
+                 },
+    "summary":  {
+                    "total_items_old":  2,
+                    "total_items_new":  3,
+                    "added_count":  1,
+                    "removed_count":  0,
+                    "modified_count":  1,
+                    "unchanged_count":  1,
+                    "field_change_count":  7,
+                    "unresolved_rejections_old":  0,
+                    "unresolved_rejections_new":  0,
+                    "validation_errors_old":  1,
+                    "validation_errors_new":  1,
+                    "validation_warnings_old":  1,
+                    "validation_warnings_new":  1,
+                    "validation_passed_old":  16,
+                    "validation_passed_new":  25,
+                    "validation_total_old":  18,
+                    "validation_total_new":  27,
+                    "validation_changes_new_violation":  1,
+                    "validation_changes_resolved":  1,
+                    "validation_changes_modified":  0,
+                    "validation_changes_new_passed":  8,
+                    "validation_changes_removed_passed":  0,
+                    "validation_changes_unchanged":  17,
+                    "validation_changes_total":  27,
+                    "old_version_validation_status":  "failed",
+                    "new_version_validation_status":  "failed"
+                },
+    "has_added":  true,
+    "has_removed":  false,
+    "has_modified":  true,
+    "has_unresolved_rejections":  false,
+    "has_validation_changes":  true,
+    "added_items":  [
+                        {
+                            "item_key":  "BAD-300",
+                            "action":  "added",
+                            "line_number_old":  null,
+                            "line_number_new":  3,
+                            "old_data":  null,
+                            "new_data":  {
+                                             "item_id":  "BAD-300",
+                                             "item_name":  "Server C",
+                                             "quantity":  1,
+                                             "unit_price":  99,
+                                             "total_amount":  99.0
+                                         },
+                            "field_changes":  [
+                                                  {
+                                                      "field_name":  "item_id",
+                                                      "old_value":  null,
+                                                      "new_value":  "BAD-300",
+                                                      "change_type":  "added"
+                                                  },
+                                                  {
+                                                      "field_name":  "item_name",
+                                                      "old_value":  null,
+                                                      "new_value":  "Server C",
+                                                      "change_type":  "added"
+                                                  },
+                                                  {
+                                                      "field_name":  "quantity",
+                                                      "old_value":  null,
+                                                      "new_value":  1,
+                                                      "change_type":  "added"
+                                                  },
+                                                  {
+                                                      "field_name":  "total_amount",
+                                                      "old_value":  null,
+                                                      "new_value":  99.0,
+                                                      "change_type":  "added"
+                                                  },
+                                                  {
+                                                      "field_name":  "unit_price",
+                                                      "old_value":  null,
+                                                      "new_value":  99,
+                                                      "change_type":  "added"
+                                                  }
+                                              ]
+                        }
+                    ],
+    "removed_items":  [
+
+                      ],
+    "modified_items":  [
+                           {
+                               "item_key":  "ITEM-100",
+                               "action":  "modified",
+                               "line_number_old":  1,
+                               "line_number_new":  1,
+                               "old_data":  {
+                                                "item_id":  "ITEM-100",
+                                                "item_name":  "Server A",
+                                                "quantity":  20001,
+                                                "unit_price":  12.5,
+                                                "total_amount":  250012.5
+                                            },
+                               "new_data":  {
+                                                "item_id":  "ITEM-100",
+                                                "item_name":  "Server A",
+                                                "quantity":  2000,
+                                                "unit_price":  12.5,
+                                                "total_amount":  25000.0
+                                            },
+                               "field_changes":  [
+                                                     {
+                                                         "field_name":  "quantity",
+                                                         "old_value":  20001,
+                                                         "new_value":  2000,
+                                                         "change_type":  "modified"
+                                                     },
+                                                     {
+                                                         "field_name":  "total_amount",
+                                                         "old_value":  250012.5,
+                                                         "new_value":  25000.0,
+                                                         "change_type":  "modified"
+                                                     }
+                                                 ]
+                           }
+                       ],
+    "unchanged_items":  [
+                            {
+                                "item_key":  "ITEM-200",
+                                "action":  "unchanged",
+                                "change_summary":  "å\u0085å®¹æ åæ´",
+                                "changed_fields":  [
+
+                                                   ]
+                            }
+                        ],
+    "unresolved_rejections":  [
+
+                              ],
+    "validation_changes":  [
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "total_amount",
+                                   "rule_code":  "CALC_TOTAL_AMOUNT",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "FORMAT_ITEM_ID",
+                                   "old_severity":  null,
+                                   "new_severity":  "warning",
+                                   "old_passed":  null,
+                                   "new_passed":  false,
+                                   "old_message":  null,
+                                   "new_message":  "å­æ®µ \u0027item_id\u0027 å¼ \u0027BAD-300\u0027 ä¸å¹é\u0085æ¨¡å¼ \u0027^ITEM-\u0027",
+                                   "change_type":  "new_violation"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "RANGE_QUANTITY",
+                                   "old_severity":  null,
+                                   "new_severity":  "warning",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "REQ_ITEM_ID",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "item_name",
+                                   "rule_code":  "REQ_ITEM_NAME",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "REQ_QUANTITY",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "REQ_UNIT_PRICE",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "TYPE_PRICE_POSITIVE",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "BAD-300",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "TYPE_QUANTITY_INT",
+                                   "old_severity":  null,
+                                   "new_severity":  "error",
+                                   "old_passed":  null,
+                                   "new_passed":  true,
+                                   "old_message":  null,
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "new_passed"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "total_amount",
+                                   "rule_code":  "CALC_TOTAL_AMOUNT",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "FORMAT_ITEM_ID",
+                                   "old_severity":  "warning",
+                                   "new_severity":  "warning",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "RANGE_QUANTITY",
+                                   "old_severity":  "warning",
+                                   "new_severity":  "warning",
+                                   "old_passed":  false,
+                                   "new_passed":  true,
+                                   "old_message":  "å­æ®µ \u0027quantity\u0027 å¼ 20001 å¤§äºæå¤§å¼ 10000",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "resolved"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "REQ_ITEM_ID",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "item_name",
+                                   "rule_code":  "REQ_ITEM_NAME",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "REQ_QUANTITY",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "REQ_UNIT_PRICE",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "TYPE_PRICE_POSITIVE",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-100",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "TYPE_QUANTITY_INT",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "total_amount",
+                                   "rule_code":  "CALC_TOTAL_AMOUNT",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  false,
+                                   "new_passed":  false,
+                                   "old_message":  "å­æ®µ \u0027total_amount\u0027 è®¡ç®éè¯¯: é¢æ 100.00, å®é\u0085 999.00",
+                                   "new_message":  "å­æ®µ \u0027total_amount\u0027 è®¡ç®éè¯¯: é¢æ 100.00, å®é\u0085 999.00",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "FORMAT_ITEM_ID",
+                                   "old_severity":  "warning",
+                                   "new_severity":  "warning",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "RANGE_QUANTITY",
+                                   "old_severity":  "warning",
+                                   "new_severity":  "warning",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "item_id",
+                                   "rule_code":  "REQ_ITEM_ID",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "item_name",
+                                   "rule_code":  "REQ_ITEM_NAME",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "REQ_QUANTITY",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "REQ_UNIT_PRICE",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "unit_price",
+                                   "rule_code":  "TYPE_PRICE_POSITIVE",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               },
+                               {
+                                   "item_key":  "ITEM-200",
+                                   "field_name":  "quantity",
+                                   "rule_code":  "TYPE_QUANTITY_INT",
+                                   "old_severity":  "error",
+                                   "new_severity":  "error",
+                                   "old_passed":  true,
+                                   "new_passed":  true,
+                                   "old_message":  "æ ¡éªéè¿",
+                                   "new_message":  "æ ¡éªéè¿",
+                                   "change_type":  "unchanged"
+                               }
+                           ]
+}

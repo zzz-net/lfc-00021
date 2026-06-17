@@ -96,6 +96,13 @@ def run_validation(
             detail="No manifest imported for this batch. Please import manifest first."
         )
 
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(
+        "[VALIDATE_START] batch_id=%d, user=%d, current_version_id=%d, status_before='%s'",
+        batch_id, current_user.id, batch.current_manifest_version_id, batch.status
+    )
+
     engine = ValidationEngine(db)
     try:
         result = engine.run_validation(batch.current_manifest_version_id)
@@ -105,11 +112,32 @@ def run_validation(
             detail=str(e)
         )
 
-    from app.diff_engine import refresh_snapshots_for_batch
-    refreshed = refresh_snapshots_for_batch(db, batch_id, current_user)
-
     summary = result["summary"]
+    logger.info(
+        "[VALIDATE_DONE] batch_id=%d, version_id=%d, "
+        "total_rules=%d, total_checks=%d, passed=%d, failed=%d, warnings=%d, "
+        "validation_passed=%s, failed_items=%d, warning_items=%d",
+        batch_id, batch.current_manifest_version_id,
+        result["total_rules"], summary["total_checks"],
+        summary["passed"], summary["failed"], summary["warnings"],
+        summary["validation_passed"],
+        summary.get("failed_items_count", 0), summary.get("warning_items_count", 0)
+    )
+
+    from app.diff_engine import refresh_snapshots_for_batch
+    refreshed = refresh_snapshots_for_batch(db, batch_id, current_user, trigger="validate")
+
+    logger.info(
+        "[VALIDATE_SNAPSHOTS_REFRESHED] batch_id=%d, snapshots_refreshed=%d",
+        batch_id, refreshed
+    )
+
     result_models = result["results"]
+
+    msg = (
+        f"校验完成: {summary['passed']} 通过, {summary['failed']} 错误, {summary['warnings']} 警告. "
+        f"已同步刷新 {refreshed} 份版本差异快照数据面."
+    )
 
     return ValidationRunResponse(
         success=True,
@@ -121,7 +149,7 @@ def run_validation(
         warnings=summary["warnings"],
         validation_summary=summary,
         results=result_models,
-        message=f"校验完成: {summary['passed']} 通过, {summary['failed']} 错误, {summary['warnings']} 警告"
+        message=msg
     )
 
 

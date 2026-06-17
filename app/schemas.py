@@ -455,6 +455,8 @@ class VersionDiffSummary(BaseModel):
     validation_changes_removed_passed: int
     validation_changes_unchanged: int
     validation_changes_total: int
+    old_version_validation_status: Optional[str] = None
+    new_version_validation_status: Optional[str] = None
 
 
 class VersionDiffResponse(BaseModel):

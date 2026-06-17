@@ -23,6 +23,17 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# MODULE LOAD 标记 —— 服务启动时必打，用于确认代码版本
+# ═══════════════════════════════════════════════════════════════════════════════
+logger.warning(
+    "[MODULE_LOAD] diff_engine.py loaded. Key features: "
+    "schema_stale_check=YES, "
+    "save_diff_snapshot_summary_fields_log=YES, "
+    "refresh_snapshot_schema_upgrade_force_rewrite=YES, "
+    "validation_status_none_shortcut_fixed=YES"
+)
+
 
 def _sha256_hex(s: str) -> str:
     return hashlib.sha256(s.encode("utf-8")).hexdigest()
@@ -427,6 +438,8 @@ def calculate_version_diff(
         validation_changes_removed_passed=val_change_counts["removed_passed"],
         validation_changes_unchanged=val_change_counts["unchanged"],
         validation_changes_total=val_change_counts["total"],
+        old_version_validation_status=old_version.validation_status,
+        new_version_validation_status=new_version.validation_status,
     )
 
     logger.info(
@@ -517,11 +530,16 @@ def save_diff_snapshot(
     db.add(snapshot)
     db.flush()
 
+    from app.schemas import VersionDiffSummary
+    schema_count = len(VersionDiffSummary.model_fields)
+    actual_count = len(snapshot.summary_json)
+    missing = sorted(set(VersionDiffSummary.model_fields.keys()) - set(snapshot.summary_json.keys()))
     logger.info(
         "Created new snapshot %s (id=%d, hash=%s...), "
-        "validation_changes=%d items",
+        "validation_changes=%d items, summary_fields=%d/%d, missing=%s",
         snapshot_key, snapshot.id, content_hash[:16],
-        len(diff.validation_changes)
+        len(diff.validation_changes),
+        actual_count, schema_count, missing
     )
 
     return snapshot
@@ -532,7 +550,8 @@ def get_or_compute_diff(
     batch: DeliveryBatch,
     old_version: ManifestVersion,
     new_version: ManifestVersion,
-    current_user: User
+    current_user: User,
+    auto_persist: bool = True
 ) -> tuple:
     snapshot = get_snapshot_by_versions(
         db, batch.id, old_version.version_number, new_version.version_number
@@ -550,12 +569,41 @@ def get_or_compute_diff(
             snapshot = refresh_snapshot(db, snapshot, current_user)
             db.commit()
             db.refresh(snapshot)
+        else:
+            logger.debug(
+                "Snapshot %s is fresh (hash=%s...), reusing.",
+                snapshot.snapshot_key, snapshot.content_hash[:16]
+            )
         return snapshot_to_diff_response(snapshot), True, snapshot
-    logger.debug(
-        "No snapshot found for v%d -> v%d, computing live diff...",
-        old_version.version_number, new_version.version_number
+
+    logger.info(
+        "No snapshot found for v%d -> v%d, computing live diff (auto_persist=%s)...",
+        old_version.version_number, new_version.version_number, auto_persist
     )
     diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
+
+    if auto_persist:
+        logger.info(
+            "Live diff computed for v%d -> v%d, persisting as new snapshot to ensure consistency...",
+            old_version.version_number, new_version.version_number
+        )
+        try:
+            snapshot = save_diff_snapshot(db, batch, old_version, new_version, diff, current_user)
+            db.commit()
+            db.refresh(snapshot)
+            logger.info(
+                "Persisted snapshot %s (id=%d, hash=%s...), validation_changes=%d items",
+                snapshot.snapshot_key, snapshot.id, snapshot.content_hash[:16],
+                len(diff.validation_changes)
+            )
+            return snapshot_to_diff_response(snapshot), False, snapshot
+        except Exception as e:
+            logger.warning(
+                "Failed to persist snapshot for v%d -> v%d: %s. Returning in-memory diff anyway.",
+                old_version.version_number, new_version.version_number, str(e)
+            )
+            return diff, False, None
+
     return diff, False, None
 
 
@@ -607,15 +655,13 @@ def list_snapshots(
 
 
 def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
+    from app.schemas import VersionDiffSummary
     new_ver = db.query(ManifestVersion).filter(
         ManifestVersion.id == snapshot.new_version_id
     ).first()
     old_ver = db.query(ManifestVersion).filter(
         ManifestVersion.id == snapshot.old_version_id
     ).first()
-
-    new_validated = new_ver and new_ver.validation_status != "pending"
-    old_validated = old_ver and old_ver.validation_status != "pending"
 
     snap_new_warnings = snapshot.summary_json.get("validation_warnings_new", 0)
     snap_old_warnings = snapshot.summary_json.get("validation_warnings_old", 0)
@@ -625,37 +671,64 @@ def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
     snap_old_passed = snapshot.summary_json.get("validation_passed_old", 0)
     snap_new_total = snapshot.summary_json.get("validation_total_new", 0)
     snap_old_total = snapshot.summary_json.get("validation_total_old", 0)
+    snap_new_status = snapshot.summary_json.get("new_version_validation_status", None)
+    snap_old_status = snapshot.summary_json.get("old_version_validation_status", None)
 
     stale_reasons = []
 
-    if new_validated:
+    schema_field_count = len(VersionDiffSummary.model_fields)
+    actual_field_count = len(snapshot.summary_json)
+    if actual_field_count < schema_field_count:
+        stale_reasons.append(
+            f"schema upgrade: snapshot has {actual_field_count}/{schema_field_count} fields "
+            f"(missing: {sorted(set(VersionDiffSummary.model_fields.keys()) - set(snapshot.summary_json.keys()))})"
+        )
+
+    if new_ver:
+        actual_new_status = new_ver.validation_status
+        if (snap_new_status is None and actual_new_status is not None):
+            stale_reasons.append(
+                f"new_version validation_status newly available: None->{actual_new_status}"
+            )
+        elif (snap_new_status is not None and snap_new_status != actual_new_status):
+            stale_reasons.append(
+                f"new_version validation_status changed: {snap_new_status}->{actual_new_status}"
+            )
         actual_new_errors, actual_new_warnings, actual_new_passed, actual_new_total = _count_validation_issues(db, new_ver.id)
         if (actual_new_errors != snap_new_errors or actual_new_warnings != snap_new_warnings
                 or actual_new_passed != snap_new_passed or actual_new_total != snap_new_total):
             stale_reasons.append(
-                f"new_version validation changed: "
+                f"new_version validation counts changed: "
                 f"errors {snap_new_errors}->{actual_new_errors}, "
                 f"warnings {snap_new_warnings}->{actual_new_warnings}, "
                 f"passed {snap_new_passed}->{actual_new_passed}, "
                 f"total {snap_new_total}->{actual_new_total}"
             )
-
     elif snap_new_total > 0:
-        stale_reasons.append("new_version changed from validated to pending")
+        stale_reasons.append("new_version record missing but snapshot had validation data")
 
-    if old_validated:
+    if old_ver:
+        actual_old_status = old_ver.validation_status
+        if (snap_old_status is None and actual_old_status is not None):
+            stale_reasons.append(
+                f"old_version validation_status newly available: None->{actual_old_status}"
+            )
+        elif (snap_old_status is not None and snap_old_status != actual_old_status):
+            stale_reasons.append(
+                f"old_version validation_status changed: {snap_old_status}->{actual_old_status}"
+            )
         actual_old_errors, actual_old_warnings, actual_old_passed, actual_old_total = _count_validation_issues(db, old_ver.id)
         if (actual_old_errors != snap_old_errors or actual_old_warnings != snap_old_warnings
                 or actual_old_passed != snap_old_passed or actual_old_total != snap_old_total):
             stale_reasons.append(
-                f"old_version validation changed: "
+                f"old_version validation counts changed: "
                 f"errors {snap_old_errors}->{actual_old_errors}, "
                 f"warnings {snap_old_warnings}->{actual_old_warnings}, "
                 f"passed {snap_old_passed}->{actual_old_passed}, "
                 f"total {snap_old_total}->{actual_old_total}"
             )
     elif snap_old_total > 0:
-        stale_reasons.append("old_version changed from validated to pending")
+        stale_reasons.append("old_version record missing but snapshot had validation data")
 
     actual_unresolved = db.query(RejectionRecord).filter(
         RejectionRecord.batch_id == snapshot.batch_id,
@@ -667,18 +740,38 @@ def _is_snapshot_stale(db: Session, snapshot: VersionDiffSnapshot) -> bool:
             f"unresolved_rejections changed: {snap_unresolved}->{actual_unresolved}"
         )
 
+    snap_added = snapshot.summary_json.get("added_count", 0)
+    snap_removed = snapshot.summary_json.get("removed_count", 0)
+    snap_modified = snapshot.summary_json.get("modified_count", 0)
+    snap_unchanged = snapshot.summary_json.get("unchanged_count", 0)
+    if new_ver and old_ver:
+        old_items = db.query(ManifestItem).filter(ManifestItem.manifest_version_id == old_ver.id).count()
+        new_items = db.query(ManifestItem).filter(ManifestItem.manifest_version_id == new_ver.id).count()
+        snap_old_items = snapshot.summary_json.get("total_items_old", 0)
+        snap_new_items = snapshot.summary_json.get("total_items_new", 0)
+        if snap_old_items != old_items:
+            stale_reasons.append(f"old_version item_count changed: {snap_old_items}->{old_items}")
+        if snap_new_items != new_items:
+            stale_reasons.append(f"new_version item_count changed: {snap_new_items}->{new_items}")
+
     if stale_reasons:
         logger.info(
-            "Snapshot %s (v%d -> v%d) is stale: %s",
+            "Snapshot %s (v%d -> v%d) marked STALE. Reasons: %s",
             snapshot.snapshot_key, snapshot.old_version_number, snapshot.new_version_number,
             "; ".join(stale_reasons)
         )
         return True
 
+    logger.debug(
+        "Snapshot %s (v%d -> v%d) is FRESH: errors_new=%d, warnings_new=%d, "
+        "total_new=%d, unresolved=%d",
+        snapshot.snapshot_key, snapshot.old_version_number, snapshot.new_version_number,
+        snap_new_errors, snap_new_warnings, snap_new_total, snap_unresolved
+    )
     return False
 
 
-def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: User) -> VersionDiffSnapshot:
+def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: User, trigger: str = "unknown") -> VersionDiffSnapshot:
     batch = db.query(DeliveryBatch).filter(DeliveryBatch.id == snapshot.batch_id).first()
     old_version = db.query(ManifestVersion).filter(
         ManifestVersion.id == snapshot.old_version_id
@@ -688,14 +781,17 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
     ).first()
     if not batch or not old_version or not new_version:
         logger.warning(
-            "Cannot refresh snapshot %s: missing batch or versions",
-            snapshot.snapshot_key
+            "[REFRESH:%s] Cannot refresh snapshot %s: missing batch or versions",
+            trigger, snapshot.snapshot_key
         )
         return snapshot
 
     logger.info(
-        "Refreshing snapshot %s (v%d -> v%d)...",
-        snapshot.snapshot_key, snapshot.old_version_number, snapshot.new_version_number
+        "[REFRESH:%s] Start refreshing snapshot %s (v%d -> v%d), old_validation: v%d=%s, v%d=%s",
+        trigger, snapshot.snapshot_key,
+        snapshot.old_version_number, snapshot.new_version_number,
+        snapshot.old_version_number, old_version.validation_status,
+        snapshot.new_version_number, new_version.validation_status
     )
 
     diff = calculate_version_diff(db, batch, old_version, new_version, current_user)
@@ -706,14 +802,28 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
 
     new_hash = _compute_content_hash(diff)
 
-    if snapshot.content_hash == new_hash:
+    from app.schemas import VersionDiffSummary
+    schema_field_count = len(VersionDiffSummary.model_fields)
+    current_field_count = len(snapshot.summary_json)
+    schema_upgrade_needed = current_field_count < schema_field_count
+
+    if snapshot.content_hash == new_hash and not schema_upgrade_needed:
         logger.info(
-            "Snapshot %s content unchanged after refresh (hash=%s)",
-            snapshot.snapshot_key, new_hash[:16]
+            "[REFRESH:%s] Snapshot %s content UNCHANGED (hash=%s...), skipping update. validation_changes still %d items.",
+            trigger, snapshot.snapshot_key, new_hash[:16],
+            len(snapshot.validation_changes_json or [])
         )
         return snapshot
 
+    force_reason = ""
+    if schema_upgrade_needed:
+        force_reason = (
+            f" [SCHEMA_UPGRADE: {current_field_count}->{schema_field_count} fields, "
+            f"missing: {sorted(set(VersionDiffSummary.model_fields.keys()) - set(snapshot.summary_json.keys()))}]"
+        )
+
     old_hash = snapshot.content_hash
+    old_val_changes = len(snapshot.validation_changes_json or [])
     snapshot.content_hash = new_hash
     snapshot.metadata_json = diff.metadata.model_dump(mode='json')
     snapshot.summary_json = diff.summary.model_dump(mode='json')
@@ -725,43 +835,67 @@ def refresh_snapshot(db: Session, snapshot: VersionDiffSnapshot, current_user: U
     snapshot.validation_changes_json = [c.model_dump(mode='json') for c in diff.validation_changes]
     db.flush()
 
+    new_val_changes = len(diff.validation_changes)
+    update_kind = "content_changed" if old_hash != new_hash else "schema_only"
     logger.info(
-        "Snapshot %s refreshed: hash %s... -> %s..., "
-        "validation_changes %d items",
-        snapshot.snapshot_key,
+        "[REFRESH:%s] Snapshot %s UPDATED: hash %s... -> %s... (kind=%s%s), "
+        "validation_changes: %d -> %d (delta=%+d), "
+        "breakdown: new_violation=%d, resolved=%d, modified=%d, "
+        "new_passed=%d, removed_passed=%d, unchanged=%d",
+        trigger, snapshot.snapshot_key,
         old_hash[:16], new_hash[:16],
-        len(diff.validation_changes)
+        update_kind, force_reason,
+        old_val_changes, new_val_changes, new_val_changes - old_val_changes,
+        diff.summary.validation_changes_new_violation,
+        diff.summary.validation_changes_resolved,
+        diff.summary.validation_changes_modified,
+        diff.summary.validation_changes_new_passed,
+        diff.summary.validation_changes_removed_passed,
+        diff.summary.validation_changes_unchanged
     )
 
     return snapshot
 
 
-def refresh_snapshots_for_batch(db: Session, batch_id: int, current_user: User) -> int:
+def refresh_snapshots_for_batch(db: Session, batch_id: int, current_user: User, trigger: str = "validate") -> int:
     snapshots = db.query(VersionDiffSnapshot).filter(
         VersionDiffSnapshot.batch_id == batch_id,
         VersionDiffSnapshot.status == SNAPSHOT_VALID
     ).all()
 
     logger.info(
-        "Refreshing snapshots for batch %d: found %d valid snapshots",
-        batch_id, len(snapshots)
+        "[BATCH_REFRESH:%s] Batch %d: checking %d valid snapshots for staleness...",
+        trigger, batch_id, len(snapshots)
     )
+
+    if not snapshots:
+        logger.info(
+            "[BATCH_REFRESH:%s] Batch %d has no snapshots, nothing to refresh.",
+            trigger, batch_id
+        )
+        return 0
 
     refreshed = 0
     for snap in snapshots:
         if _is_snapshot_stale(db, snap):
-            refresh_snapshot(db, snap, current_user)
+            refresh_snapshot(db, snap, current_user, trigger=trigger)
             refreshed += 1
+        else:
+            logger.debug(
+                "[BATCH_REFRESH:%s] Snapshot %s (v%d->v%d) is fresh, skipping.",
+                trigger, snap.snapshot_key, snap.old_version_number, snap.new_version_number
+            )
+
     if refreshed:
         db.commit()
         logger.info(
-            "Refreshed %d/%d snapshots for batch %d",
-            refreshed, len(snapshots), batch_id
+            "[BATCH_REFRESH:%s] Batch %d: REFRESHED %d/%d snapshots (committed to DB).",
+            trigger, batch_id, refreshed, len(snapshots)
         )
     else:
         logger.info(
-            "No stale snapshots found for batch %d, all %d snapshots are up to date",
-            batch_id, len(snapshots)
+            "[BATCH_REFRESH:%s] Batch %d: All %d snapshots already up to date, no DB write needed.",
+            trigger, batch_id, len(snapshots)
         )
     return refreshed
 
