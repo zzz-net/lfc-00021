@@ -227,9 +227,7 @@ CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE = "archive.allow_overwrite_existing_batch"
 CONFIG_KEY_ARCHIVE_ENABLED = "archive.enabled"
 CONFIG_KEY_ARCHIVE_ROLE_REQUIRED = "archive.role_required"
 
-CONFIG_KEY_SANDBOX_ENABLED = "sandbox.enabled"
-CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM = "sandbox.require_admin_confirm"
-CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS = "sandbox.auto_expire_hours"
+
 
 SANDBOX_STATUS_PENDING = "pending"
 SANDBOX_STATUS_PRECHECK_RUNNING = "precheck_running"

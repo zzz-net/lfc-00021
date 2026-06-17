@@ -1,12 +1,15 @@
 from fastapi import Header, HTTPException, Depends, status
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import User, DeliveryBatch, CONFIG_KEY_SANDBOX_ENABLED, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM
+from app.models import User, DeliveryBatch
 from app.schemas import (
     ROLE_ADMIN, ROLE_LEAD, ROLE_REVIEWER, ROLE_SUBMITTER,
     VALID_STATUS_TRANSITIONS
 )
-from app.archive_service import _get_config_bool
+from app.sandbox_config import (
+    is_sandbox_enabled,
+    require_admin_for_confirm,
+)
 
 
 def get_current_user(
@@ -110,8 +113,7 @@ def require_version_diff_access(
 
 
 def check_sandbox_enabled(db: Session = Depends(get_db)):
-    enabled = _get_config_bool(db, CONFIG_KEY_SANDBOX_ENABLED, True)
-    if not enabled:
+    if not is_sandbox_enabled(db):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="系统配置已关闭恢复后验收沙盒功能"
@@ -123,8 +125,7 @@ def require_sandbox_confirm_permission(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ) -> User:
-    require_admin = _get_config_bool(db, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, True)
-    if require_admin:
+    if require_admin_for_confirm(db):
         if current_user.role != ROLE_ADMIN:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,

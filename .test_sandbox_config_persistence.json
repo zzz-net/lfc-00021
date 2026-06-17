@@ -1,0 +1,7 @@
+{
+  "sandbox_enabled": true,
+  "require_admin_confirm": true,
+  "auto_expire_hours": 36,
+  "timestamp": 1781675073.0264478,
+  "timestamp_human": "2026-06-17 13:44:33"
+}

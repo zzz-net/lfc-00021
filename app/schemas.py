@@ -834,35 +834,19 @@ class SandboxAuditLogResponse(BaseModel):
     extra_data: Optional[Dict[str, Any]] = None
 
 
-SANDBOX_CONFIG_KEY_ENABLED = "sandbox.enabled"
-SANDBOX_CONFIG_KEY_REQUIRE_ADMIN = "sandbox.require_admin_confirm"
-SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS = "sandbox.auto_expire_hours"
-
-SANDBOX_CONFIG_WHITELIST = [
-    SANDBOX_CONFIG_KEY_ENABLED,
-    SANDBOX_CONFIG_KEY_REQUIRE_ADMIN,
-    SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS,
-]
-
-SANDBOX_CONFIG_VALUE_TYPES = {
-    SANDBOX_CONFIG_KEY_ENABLED: "bool",
-    SANDBOX_CONFIG_KEY_REQUIRE_ADMIN: "bool",
-    SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS: "int",
-}
-
-SANDBOX_CONFIG_DESCRIPTIONS = {
-    SANDBOX_CONFIG_KEY_ENABLED: "是否启用恢复后验收沙盒功能",
-    SANDBOX_CONFIG_KEY_REQUIRE_ADMIN: "沙盒正式确认是否需要 admin 权限（否则 lead 也可确认）",
-    SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS: "沙盒会话自动过期时间（小时）",
-}
-
-
 class SandboxConfigUpdateRequest(BaseModel):
     config_value: str
+    expected_old_value: Optional[str] = None
+
+
+class SandboxConfigBatchUpdateItem(BaseModel):
+    config_key: str
+    config_value: str
+    expected_old_value: Optional[str] = None
 
 
 class SandboxConfigBatchUpdateRequest(BaseModel):
-    updates: Dict[str, str]
+    updates: List[SandboxConfigBatchUpdateItem]
 
 
 class SandboxConfigResponse(BaseModel):

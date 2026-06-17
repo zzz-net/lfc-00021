@@ -10,6 +10,7 @@ from app.database import engine, Base, SessionLocal
 from app.models import *
 from app.seed_data import initialize_seed_data
 from app.archive_service import ensure_default_configs
+from app.sandbox_config import ensure_default_configs as ensure_sandbox_default_configs
 
 from app.routers import users, batches, manifests, validations, approvals, reports
 from app.routers import archive as archive_router
@@ -55,6 +56,7 @@ def on_startup():
     try:
         initialize_seed_data(db)
         ensure_default_configs(db)
+        ensure_sandbox_default_configs(db)
     finally:
         db.close()
 

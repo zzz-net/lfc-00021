@@ -285,11 +285,11 @@ def test_config_update_and_validation():
     print("\n--- 2.11 批量修改配置 ---")
     r = safe_request("PATCH", f"{API}/api/sandbox-config/batch",
         headers=H_ADMIN,
-        json={"updates": {
-            "sandbox.enabled": "true",
-            "sandbox.require_admin_confirm": "true",
-            "sandbox.auto_expire_hours": "24",
-        }})
+        json={"updates": [
+            {"config_key": "sandbox.enabled", "config_value": "true"},
+            {"config_key": "sandbox.require_admin_confirm", "config_value": "true"},
+            {"config_key": "sandbox.auto_expire_hours", "config_value": "24"},
+        ]})
     check("2.11.1 批量修改 status=200", r.status_code == 200,
         f"status={r.status_code}, body={r.text[:200]}")
     if r.status_code == 200:
@@ -302,11 +302,11 @@ def test_config_update_and_validation():
     print("\n--- 2.12 批量修改：部分非法值场景 ---")
     r = safe_request("PATCH", f"{API}/api/sandbox-config/batch",
         headers=H_ADMIN,
-        json={"updates": {
-            "sandbox.enabled": "true",
-            "sandbox.auto_expire_hours": "invalid",
-            "not.in.whitelist": "true",
-        }})
+        json={"updates": [
+            {"config_key": "sandbox.enabled", "config_value": "true"},
+            {"config_key": "sandbox.auto_expire_hours", "config_value": "invalid"},
+            {"config_key": "not.in.whitelist", "config_value": "true"},
+        ]})
     check("2.12.1 部分失败 status=200", r.status_code == 200)
     if r.status_code == 200:
         data = r.json()
@@ -610,9 +610,9 @@ def main():
         for w in _warnings:
             print(f"  [WARN] {w}")
     if _failed == 0:
-        print("\n🎉 所有测试通过！")
+        print("\n[PASS] All tests passed!")
     else:
-        print(f"\n❌ 有 {_failed} 项检查失败")
+        print(f"\n[FAIL] {_failed} checks failed")
     return 0 if _failed == 0 else 1
 
 

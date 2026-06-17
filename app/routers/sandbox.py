@@ -6,11 +6,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from app.database import get_db
-from app.models import (
-    User,
-    CONFIG_KEY_SANDBOX_ENABLED, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM,
-    SANDBOX_STATUS_CONFIRMED, SANDBOX_STATUS_REJECTED,
-)
+from app.models import User
 from app.schemas import (
     SandboxRestoreResponse, SandboxImportResponse,
     SandboxDiffResponse, SandboxPrecheckResponse,
@@ -26,7 +22,12 @@ from app.dependencies import (
     require_sandbox_confirm_permission,
     require_sandbox_view_permission,
 )
-from app.archive_service import _get_config_bool
+from app.sandbox_config import (
+    is_sandbox_enabled,
+    require_admin_for_confirm,
+    CONFIG_KEY_SANDBOX_ENABLED,
+    CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM,
+)
 from app.sandbox_service import (
     restore_archive_to_sandbox,
     import_candidate_to_sandbox,
@@ -249,11 +250,11 @@ def check_sandbox_eligibility(
 ):
     _check_sandbox_enabled(db)
 
-    sandbox_enabled = _get_config_bool(db, CONFIG_KEY_SANDBOX_ENABLED, True)
-    require_admin_confirm = _get_config_bool(db, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, True)
+    sandbox_enabled = is_sandbox_enabled(db)
+    req_admin_confirm = require_admin_for_confirm(db)
 
     can_confirm = False
-    if require_admin_confirm:
+    if req_admin_confirm:
         can_confirm = current_user.role == ROLE_ADMIN
     else:
         can_confirm = current_user.role in [ROLE_ADMIN, ROLE_LEAD]
@@ -263,7 +264,7 @@ def check_sandbox_eligibility(
     return {
         "sandbox_token": sandbox_token,
         "sandbox_enabled": sandbox_enabled,
-        "require_admin_confirm": require_admin_confirm,
+        "require_admin_confirm": req_admin_confirm,
         "your_role": current_user.role,
         "can_view": can_view,
         "can_confirm": can_confirm,

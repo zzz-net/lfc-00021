@@ -15,8 +15,6 @@ from app.models import (
     ImportPrecheck, SystemConfig,
     SandboxSession, SandboxManifestVersion, SandboxManifestItem,
     SandboxPrecheckResult,
-    CONFIG_KEY_SANDBOX_ENABLED, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM,
-    CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS,
     SANDBOX_STATUS_PENDING, SANDBOX_STATUS_PRECHECK_RUNNING,
     SANDBOX_STATUS_PRECHECK_PASSED, SANDBOX_STATUS_PRECHECK_FAILED,
     SANDBOX_STATUS_CONFIRMED, SANDBOX_STATUS_REJECTED,
@@ -28,9 +26,6 @@ from app.models import (
     APPROVAL_LOG_ACTION_SANDBOX_PRECHECK, APPROVAL_LOG_ACTION_SANDBOX_VIEW_DIFF,
     APPROVAL_LOG_ACTION_SANDBOX_CONFIRM, APPROVAL_LOG_ACTION_SANDBOX_REJECT,
     APPROVAL_LOG_ACTION_SANDBOX_CLEANUP,
-    APPROVAL_LOG_ACTION_SANDBOX_CONFIG_UPDATE,
-    APPROVAL_LOG_ACTION_SANDBOX_CONFIG_BATCH_UPDATE,
-    APPROVAL_LOG_ACTION_SANDBOX_CONFIG_VIEW,
 )
 from app.schemas import (
     ArchiveManifest, ArchiveImportConflict,
@@ -49,19 +44,22 @@ from app.schemas import (
     VALIDATION_CHANGE_MODIFIED, VALIDATION_CHANGE_NEW_PASSED,
     VALIDATION_CHANGE_REMOVED_PASSED, VALIDATION_CHANGE_UNCHANGED,
     BATCH_STATUS_DRAFT,
-    SANDBOX_CONFIG_WHITELIST, SANDBOX_CONFIG_VALUE_TYPES,
-    SANDBOX_CONFIG_DESCRIPTIONS,
-    SANDBOX_CONFIG_KEY_ENABLED, SANDBOX_CONFIG_KEY_REQUIRE_ADMIN,
-    SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS,
-    SandboxConfigResponse, SandboxConfigListResponse,
-    SandboxConfigAuditLogResponse,
+    ROLE_ADMIN, ROLE_LEAD,
+)
+from app.sandbox_config import (
+    CONFIG_SANDBOX_ENABLED,
+    CONFIG_SANDBOX_REQUIRE_ADMIN_CONFIRM,
+    CONFIG_SANDBOX_AUTO_EXPIRE_HOURS,
+    is_sandbox_enabled,
+    require_admin_for_confirm,
+    get_auto_expire_hours,
+    ensure_default_configs as ensure_sandbox_default_configs,
+    _parse_config_value,
 )
 from app.archive_service import (
     extract_archive, validate_archive_integrity, _parse_dt,
     ARCHIVE_SECTION_BATCH, ARCHIVE_SECTION_VERSIONS, ARCHIVE_SECTION_ITEMS,
-    _get_config_bool, _get_config_int, _get_config_value,
-    _validate_bool_value, _validate_int_value, _parse_config_value,
-    ensure_default_configs,
+    _get_config_bool, _get_config_int,
 )
 from app.validation_engine import ValidationEngine
 
@@ -90,21 +88,7 @@ def _generate_sandbox_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def _get_config_int(db: Session, key: str, default: int = 0) -> int:
-    cfg = db.query(Base).filter(Base.config_key == key).first() if False else None
-    from app.models import SystemConfig
-    cfg = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()
-    if not cfg:
-        return default
-    if cfg.value_type == "int":
-        try:
-            return int(cfg.config_value)
-        except (ValueError, TypeError):
-            return default
-    try:
-        return int(cfg.config_value)
-    except (ValueError, TypeError):
-        return default
+
 
 
 def _get_user_info(db: Session, user_id: int) -> Tuple[str, Optional[str]]:
@@ -237,8 +221,7 @@ def _parse_content(content: str, detected_format: str) -> Tuple[Optional[List[di
 
 
 def _check_sandbox_enabled(db: Session) -> Tuple[bool, Optional[str]]:
-    enabled = _get_config_bool(db, CONFIG_KEY_SANDBOX_ENABLED, True)
-    if not enabled:
+    if not is_sandbox_enabled(db):
         return False, "系统配置已关闭恢复后验收沙盒功能"
     return True, None
 
@@ -339,7 +322,7 @@ def restore_archive_to_sandbox(
     original_batch_id = batch_data.get("id") or manifest.batch_id_original
 
     token = _generate_sandbox_token()
-    expire_hours = _get_config_int(db, CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS, 24)
+    expire_hours = get_auto_expire_hours(db)
     expires_at = datetime.utcnow() + timedelta(hours=expire_hours)
 
     sandbox_session = SandboxSession(
@@ -1278,7 +1261,7 @@ def confirm_sandbox_restore(
             message=err_msg or "沙盒功能已禁用"
         )
 
-    require_admin = _get_config_bool(db, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, True)
+    require_admin = require_admin_for_confirm(db)
     from app.schemas import ROLE_ADMIN, ROLE_LEAD
     if require_admin and current_user.role != ROLE_ADMIN:
         return SandboxConfirmResponse(
@@ -1761,302 +1744,6 @@ def get_sandbox_audit_logs(
             actor_username=username,
             actor_display_name=display_name,
             created_at=log.created_at,
-            comment=log.comment,
-            extra_data=log.extra_data,
-        ).model_dump())
-
-    return results
-
-
-def _validate_sandbox_config_value(config_key: str, config_value: str) -> Tuple[bool, Optional[str]]:
-    if config_key not in SANDBOX_CONFIG_WHITELIST:
-        return False, f"配置项 {config_key} 不在沙盒配置白名单中。允许的配置: {SANDBOX_CONFIG_WHITELIST}"
-
-    value_type = SANDBOX_CONFIG_VALUE_TYPES.get(config_key, "string")
-
-    if value_type == "bool":
-        if not _validate_bool_value(config_value):
-            return False, f"配置项 {config_key} 是 bool 类型，有效值: 0/1, true/false, yes/no, on/off（不区分大小写）"
-    elif value_type == "int":
-        min_val = None
-        max_val = None
-        if config_key == SANDBOX_CONFIG_KEY_AUTO_EXPIRE_HOURS:
-            min_val = 1
-            max_val = 24 * 365
-        if not _validate_int_value(config_value, min_val, max_val):
-            range_msg = f"（范围: {min_val}-{max_val}）" if min_val is not None or max_val is not None else ""
-            return False, f"配置项 {config_key} 是 int 类型，必须输入有效整数{range_msg}"
-
-    return True, None
-
-
-def _normalize_bool_value(config_value: str) -> str:
-    v = config_value.lower()
-    if v in ("1", "true", "yes", "on"):
-        return "true"
-    return "false"
-
-
-def list_sandbox_configs(
-    db: Session,
-    current_user: User,
-) -> SandboxConfigListResponse:
-    ensure_default_configs(db)
-
-    username, _ = _get_user_info(db, current_user.id)
-    log = ApprovalLog(
-        batch_id=0,
-        actor_id=current_user.id,
-        action=APPROVAL_LOG_ACTION_SANDBOX_CONFIG_VIEW,
-        comment=f"查看沙盒配置列表",
-        extra_data={
-            "viewer_username": username,
-            "viewer_role": current_user.role,
-        }
-    )
-    db.add(log)
-    db.commit()
-
-    configs = db.query(SystemConfig).filter(
-        SystemConfig.config_key.in_(SANDBOX_CONFIG_WHITELIST)
-    ).order_by(SystemConfig.config_key).all()
-
-    items = []
-    for cfg in configs:
-        updater_username = None
-        if cfg.updated_by:
-            updater_username, _ = _get_user_info(db, cfg.updated_by)
-        items.append(SandboxConfigResponse(
-            config_key=cfg.config_key,
-            config_value=cfg.config_value,
-            value_type=cfg.value_type,
-            description=cfg.description,
-            updated_by=cfg.updated_by,
-            updated_by_username=updater_username,
-            updated_at=cfg.updated_at,
-            parsed_value=_parse_config_value(cfg.config_value, cfg.value_type),
-        ))
-
-    sandbox_enabled = _get_config_bool(db, CONFIG_KEY_SANDBOX_ENABLED, True)
-    require_admin_confirm = _get_config_bool(db, CONFIG_KEY_SANDBOX_REQUIRE_ADMIN_CONFIRM, True)
-    auto_expire_hours = _get_config_int(db, CONFIG_KEY_SANDBOX_AUTO_EXPIRE_HOURS, 24)
-
-    return SandboxConfigListResponse(
-        items=items,
-        total=len(items),
-        sandbox_enabled=sandbox_enabled,
-        require_admin_confirm=require_admin_confirm,
-        auto_expire_hours=auto_expire_hours,
-    )
-
-
-def get_sandbox_config(
-    db: Session,
-    config_key: str,
-    current_user: User,
-) -> SandboxConfigResponse:
-    ensure_default_configs(db)
-
-    if config_key not in SANDBOX_CONFIG_WHITELIST:
-        raise ValueError(f"配置项 {config_key} 不在沙盒配置白名单中。允许的配置: {SANDBOX_CONFIG_WHITELIST}")
-
-    cfg = db.query(SystemConfig).filter(SystemConfig.config_key == config_key).first()
-    if not cfg:
-        raise ValueError(f"配置项 {config_key} 不存在")
-
-    updater_username = None
-    if cfg.updated_by:
-        updater_username, _ = _get_user_info(db, cfg.updated_by)
-
-    return SandboxConfigResponse(
-        config_key=cfg.config_key,
-        config_value=cfg.config_value,
-        value_type=cfg.value_type,
-        description=cfg.description,
-        updated_by=cfg.updated_by,
-        updated_by_username=updater_username,
-        updated_at=cfg.updated_at,
-        parsed_value=_parse_config_value(cfg.config_value, cfg.value_type),
-    )
-
-
-def update_sandbox_config(
-    db: Session,
-    config_key: str,
-    config_value: str,
-    current_user: User,
-) -> SandboxConfigResponse:
-    ensure_default_configs(db)
-
-    valid, err_msg = _validate_sandbox_config_value(config_key, config_value)
-    if not valid:
-        raise ValueError(err_msg)
-
-    cfg = db.query(SystemConfig).filter(SystemConfig.config_key == config_key).first()
-    if not cfg:
-        raise ValueError(f"配置项 {config_key} 不存在")
-
-    old_value = cfg.config_value
-    value_type = SANDBOX_CONFIG_VALUE_TYPES.get(config_key, "string")
-
-    normalized_value = config_value
-    if value_type == "bool":
-        normalized_value = _normalize_bool_value(config_value)
-
-    cfg.config_value = normalized_value
-    cfg.value_type = value_type
-    if not cfg.description:
-        cfg.description = SANDBOX_CONFIG_DESCRIPTIONS.get(config_key)
-    cfg.updated_by = current_user.id
-    db.commit()
-    db.refresh(cfg)
-
-    updater_username, _ = _get_user_info(db, current_user.id)
-
-    log = ApprovalLog(
-        batch_id=0,
-        actor_id=current_user.id,
-        action=APPROVAL_LOG_ACTION_SANDBOX_CONFIG_UPDATE,
-        comment=f"修改沙盒配置: {config_key} = '{old_value}' -> '{normalized_value}' ({value_type})",
-        extra_data={
-            "config_key": config_key,
-            "old_value": old_value,
-            "new_value": normalized_value,
-            "value_type": value_type,
-            "updated_by_username": updater_username,
-        }
-    )
-    db.add(log)
-    db.commit()
-
-    return SandboxConfigResponse(
-        config_key=cfg.config_key,
-        config_value=cfg.config_value,
-        value_type=cfg.value_type,
-        description=cfg.description,
-        updated_by=cfg.updated_by,
-        updated_by_username=updater_username,
-        updated_at=cfg.updated_at,
-        parsed_value=_parse_config_value(cfg.config_value, cfg.value_type),
-    )
-
-
-def batch_update_sandbox_configs(
-    db: Session,
-    updates: Dict[str, str],
-    current_user: User,
-) -> Dict[str, Any]:
-    ensure_default_configs(db)
-
-    results = {}
-    errors = []
-    actual_updates = []
-
-    for config_key, config_value in updates.items():
-        valid, err_msg = _validate_sandbox_config_value(config_key, config_value)
-        if not valid:
-            errors.append({"config_key": config_key, "error": err_msg})
-            continue
-
-        cfg = db.query(SystemConfig).filter(SystemConfig.config_key == config_key).first()
-        if not cfg:
-            errors.append({"config_key": config_key, "error": f"配置项 {config_key} 不存在"})
-            continue
-
-        value_type = SANDBOX_CONFIG_VALUE_TYPES.get(config_key, "string")
-        old_value = cfg.config_value
-        normalized_value = config_value
-        if value_type == "bool":
-            normalized_value = _normalize_bool_value(config_value)
-
-        cfg.config_value = normalized_value
-        cfg.value_type = value_type
-        if not cfg.description:
-            cfg.description = SANDBOX_CONFIG_DESCRIPTIONS.get(config_key)
-        cfg.updated_by = current_user.id
-
-        actual_updates.append({
-            "config_key": config_key,
-            "old_value": old_value,
-            "new_value": normalized_value,
-            "value_type": value_type,
-        })
-
-    db.commit()
-
-    updater_username, _ = _get_user_info(db, current_user.id)
-
-    for up in actual_updates:
-        cfg = db.query(SystemConfig).filter(SystemConfig.config_key == up["config_key"]).first()
-        if cfg:
-            updater_name = None
-            if cfg.updated_by:
-                updater_name, _ = _get_user_info(db, cfg.updated_by)
-            results[up["config_key"]] = SandboxConfigResponse(
-                config_key=cfg.config_key,
-                config_value=cfg.config_value,
-                value_type=cfg.value_type,
-                description=cfg.description,
-                updated_by=cfg.updated_by,
-                updated_by_username=updater_name,
-                updated_at=cfg.updated_at,
-                parsed_value=_parse_config_value(cfg.config_value, cfg.value_type),
-            ).model_dump()
-
-    if actual_updates:
-        log = ApprovalLog(
-            batch_id=0,
-            actor_id=current_user.id,
-            action=APPROVAL_LOG_ACTION_SANDBOX_CONFIG_BATCH_UPDATE,
-            comment=f"批量修改沙盒配置: {len(actual_updates)} 项，失败 {len(errors)} 项",
-            extra_data={
-                "updates": actual_updates,
-                "errors": errors,
-                "updated_by_username": updater_username,
-            }
-        )
-        db.add(log)
-        db.commit()
-
-    return {
-        "success": len(errors) == 0,
-        "updated_count": len(actual_updates),
-        "failed_count": len(errors),
-        "results": results,
-        "errors": errors,
-    }
-
-
-def get_sandbox_config_audit_logs(
-    db: Session,
-    current_user: User,
-    limit: int = 100,
-    offset: int = 0,
-) -> List[Dict[str, Any]]:
-    config_actions = [
-        APPROVAL_LOG_ACTION_SANDBOX_CONFIG_UPDATE,
-        APPROVAL_LOG_ACTION_SANDBOX_CONFIG_BATCH_UPDATE,
-        APPROVAL_LOG_ACTION_SANDBOX_CONFIG_VIEW,
-    ]
-
-    logs = db.query(ApprovalLog).filter(
-        ApprovalLog.action.in_(config_actions)
-    ).order_by(ApprovalLog.created_at.desc()).offset(offset).limit(limit).all()
-
-    results = []
-    for log in logs:
-        username, display_name = _get_user_info(db, log.actor_id)
-        extra = log.extra_data or {}
-        results.append(SandboxConfigAuditLogResponse(
-            id=log.id,
-            action=log.action,
-            actor_id=log.actor_id,
-            actor_username=username,
-            actor_display_name=display_name,
-            created_at=log.created_at,
-            config_key=extra.get("config_key"),
-            old_value=extra.get("old_value"),
-            new_value=extra.get("new_value"),
             comment=log.comment,
             extra_data=log.extra_data,
         ).model_dump())

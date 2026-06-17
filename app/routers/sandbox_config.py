@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List, Optional
+from typing import List
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,12 +16,16 @@ from app.schemas import (
 from app.dependencies import (
     get_current_user, require_admin, require_reviewer,
 )
-from app.sandbox_service import (
-    list_sandbox_configs,
-    get_sandbox_config,
-    update_sandbox_config,
-    batch_update_sandbox_configs,
-    get_sandbox_config_audit_logs,
+from app.sandbox_config import (
+    list_configs,
+    get_single_config,
+    update_config,
+    batch_update_configs,
+    get_audit_logs,
+    check_config_eligibility,
+    ConcurrencyConflictError,
+    ConfigValidationError,
+    CONFIG_KEYS,
 )
 
 router = APIRouter(prefix="/api/sandbox-config", tags=["沙盒配置管理台"])
@@ -33,7 +37,7 @@ def get_sandbox_config_list(
     current_user: User = Depends(require_reviewer),
 ):
     try:
-        return list_sandbox_configs(db, current_user)
+        return list_configs(db, current_user)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -42,21 +46,11 @@ def get_sandbox_config_list(
 
 
 @router.get("/eligibility", response_model=SandboxConfigEligibilityResponse)
-def check_config_eligibility(
+def check_config_eligibility_endpoint(
     current_user: User = Depends(get_current_user),
 ):
-    is_admin = current_user.role == ROLE_ADMIN
-    is_lead = current_user.role == ROLE_LEAD
-    is_reviewer = current_user.role == ROLE_REVIEWER
-    can_view = is_admin or is_lead or is_reviewer
-    can_edit = is_admin
-    return SandboxConfigEligibilityResponse(
-        can_view=can_view,
-        can_edit=can_edit,
-        is_admin=is_admin,
-        is_lead=is_lead,
-        is_reviewer=is_reviewer,
-    )
+    result = check_config_eligibility(current_user)
+    return SandboxConfigEligibilityResponse(**result)
 
 
 @router.get("/audit-logs", response_model=List[SandboxConfigAuditLogResponse])
@@ -67,7 +61,7 @@ def get_config_audit_logs(
     current_user: User = Depends(require_reviewer),
 ):
     try:
-        return get_sandbox_config_audit_logs(db, current_user, limit, offset)
+        return get_audit_logs(db, current_user, limit, offset)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -82,7 +76,8 @@ def batch_update_sandbox_config_list(
     current_user: User = Depends(require_admin),
 ):
     try:
-        result = batch_update_sandbox_configs(db, batch_data.updates, current_user)
+        updates_list = [item.model_dump() for item in batch_data.updates]
+        result = batch_update_configs(db, updates_list, current_user)
         return result
     except ValueError as e:
         raise HTTPException(
@@ -98,11 +93,25 @@ def get_single_sandbox_config(
     current_user: User = Depends(require_reviewer),
 ):
     try:
-        return get_sandbox_config(db, config_key, current_user)
-    except ValueError as e:
+        return get_single_config(db, config_key, current_user)
+    except ConfigValidationError as e:
+        if "白名单" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST
-            if "白名单" in str(e) else status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except ValueError as e:
+        if "白名单" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=str(e)
+            )
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
         )
 
@@ -115,12 +124,27 @@ def update_single_sandbox_config(
     current_user: User = Depends(require_admin),
 ):
     try:
-        return update_sandbox_config(db, config_key, update_data.config_value, current_user)
-    except ValueError as e:
-        status_code = status.HTTP_400_BAD_REQUEST
-        if "不存在" in str(e) and "白名单" not in str(e):
-            status_code = status.HTTP_404_NOT_FOUND
+        return update_config(
+            db, config_key, update_data.config_value, current_user,
+            expected_old_value=update_data.expected_old_value,
+        )
+    except ConcurrencyConflictError as e:
         raise HTTPException(
-            status_code=status_code,
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+    except ConfigValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except ValueError as e:
+        if "不存在" in str(e) and "白名单" not in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=str(e)
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
