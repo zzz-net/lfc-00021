@@ -77,6 +77,50 @@ def _get_config_bool(db: Session, key: str, default: bool = False) -> bool:
         return default
 
 
+def _get_config_int(db: Session, key: str, default: int = 0) -> int:
+    cfg = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()
+    if not cfg:
+        return default
+    try:
+        return int(cfg.config_value)
+    except (ValueError, TypeError):
+        return default
+
+
+def _get_config_value(db: Session, key: str, default: Optional[str] = None) -> Optional[str]:
+    cfg = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()
+    if not cfg:
+        return default
+    return cfg.config_value
+
+
+def _validate_bool_value(value: str) -> bool:
+    return value.lower() in ("0", "1", "true", "false", "yes", "no", "on", "off")
+
+
+def _validate_int_value(value: str, min_val: Optional[int] = None, max_val: Optional[int] = None) -> bool:
+    try:
+        v = int(value)
+        if min_val is not None and v < min_val:
+            return False
+        if max_val is not None and v > max_val:
+            return False
+        return True
+    except (ValueError, TypeError):
+        return False
+
+
+def _parse_config_value(config_value: str, value_type: str) -> Any:
+    if value_type == "bool":
+        return config_value.lower() in ("1", "true", "yes", "on")
+    elif value_type == "int":
+        try:
+            return int(config_value)
+        except (ValueError, TypeError):
+            return 0
+    return config_value
+
+
 def _set_config(db: Session, key: str, value: str, value_type: str = "string",
                 description: Optional[str] = None, updated_by: Optional[int] = None):
     cfg = db.query(SystemConfig).filter(SystemConfig.config_key == key).first()

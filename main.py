@@ -14,6 +14,7 @@ from app.archive_service import ensure_default_configs
 from app.routers import users, batches, manifests, validations, approvals, reports
 from app.routers import archive as archive_router
 from app.routers import sandbox as sandbox_router
+from app.routers import sandbox_config as sandbox_config_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -153,6 +154,7 @@ app.include_router(approvals.router)
 app.include_router(reports.router)
 app.include_router(archive_router.router)
 app.include_router(sandbox_router.router)
+app.include_router(sandbox_config_router.router)
 
 
 @app.get("/", tags=["根路径"])
