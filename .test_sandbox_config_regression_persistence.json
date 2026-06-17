@@ -1,0 +1,32 @@
+{
+  "config_snapshot": {
+    "sandbox_enabled": true,
+    "require_admin_confirm": false,
+    "auto_expire_hours": 36,
+    "items": {
+      "sandbox.auto_expire_hours": "36",
+      "sandbox.enabled": "true",
+      "sandbox.require_admin_confirm": "false"
+    }
+  },
+  "eligibility_snapshot": {
+    "admin": {
+      "can_view": true,
+      "can_confirm": true,
+      "require_admin_confirm": false
+    },
+    "lead": {
+      "can_view": true,
+      "can_confirm": true,
+      "require_admin_confirm": false
+    },
+    "reviewer": {
+      "can_view": true,
+      "can_confirm": false,
+      "require_admin_confirm": false
+    }
+  },
+  "audit_log_count_before": 100,
+  "timestamp": 1781679403.7023947,
+  "timestamp_human": "2026-06-17 14:56:43"
+}
