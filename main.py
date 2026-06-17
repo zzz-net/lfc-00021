@@ -9,8 +9,10 @@ import sys
 from app.database import engine, Base, SessionLocal
 from app.models import *
 from app.seed_data import initialize_seed_data
+from app.archive_service import ensure_default_configs
 
 from app.routers import users, batches, manifests, validations, approvals, reports
+from app.routers import archive as archive_router
 
 logging.basicConfig(
     level=logging.INFO,
@@ -50,6 +52,7 @@ def on_startup():
     db = SessionLocal()
     try:
         initialize_seed_data(db)
+        ensure_default_configs(db)
     finally:
         db.close()
 
@@ -147,6 +150,7 @@ app.include_router(manifests.router)
 app.include_router(validations.router)
 app.include_router(approvals.router)
 app.include_router(reports.router)
+app.include_router(archive_router.router)
 
 
 @app.get("/", tags=["根路径"])

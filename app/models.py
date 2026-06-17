@@ -221,3 +221,26 @@ class VersionDiffSnapshot(Base):
     new_version = relationship("ManifestVersion", foreign_keys=[new_version_id])
     creator = relationship("User", foreign_keys=[created_by])
     invalidator = relationship("User", foreign_keys=[invalidated_by])
+
+
+CONFIG_KEY_ARCHIVE_ALLOW_OVERWRITE = "archive.allow_overwrite_existing_batch"
+CONFIG_KEY_ARCHIVE_ENABLED = "archive.enabled"
+CONFIG_KEY_ARCHIVE_ROLE_REQUIRED = "archive.role_required"
+
+APPROVAL_LOG_ACTION_EXPORT_ARCHIVE = "EXPORT_ARCHIVE"
+APPROVAL_LOG_ACTION_TRY_IMPORT_ARCHIVE = "TRY_IMPORT_ARCHIVE"
+APPROVAL_LOG_ACTION_RESTORE_ARCHIVE = "RESTORE_ARCHIVE"
+APPROVAL_LOG_ACTION_RESTORE_ARCHIVE_OVERWRITE = "RESTORE_ARCHIVE_OVERWRITE"
+
+
+class SystemConfig(Base):
+    __tablename__ = "system_configs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    config_key = Column(String(100), unique=True, nullable=False, index=True)
+    config_value = Column(Text, nullable=False)
+    value_type = Column(String(20), nullable=False, default="string")
+    description = Column(String(500), nullable=True)
+    updated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

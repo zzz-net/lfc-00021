@@ -532,3 +532,86 @@ class SnapshotListResponse(BaseModel):
     batch_code: str
     total: int
     snapshots: List[VersionDiffSnapshotResponse] = []
+
+
+ARCHIVE_FORMAT_VERSION = "1.0"
+ARCHIVE_MANIFEST_FILENAME = "manifest.json"
+ARCHIVE_HASH_FILENAME = "hash.sha256"
+ARCHIVE_DATA_DIR = "data"
+
+ARCHIVE_SECTION_BATCH = "batch"
+ARCHIVE_SECTION_VERSIONS = "manifest_versions"
+ARCHIVE_SECTION_ITEMS = "manifest_items"
+ARCHIVE_SECTION_VALIDATIONS = "validation_results"
+ARCHIVE_SECTION_REJECTIONS = "rejection_records"
+ARCHIVE_SECTION_APPROVAL_LOGS = "approval_logs"
+ARCHIVE_SECTION_PRECHECKS = "import_prechecks"
+ARCHIVE_SECTION_DIFF_SNAPSHOTS = "version_diff_snapshots"
+ARCHIVE_SECTION_SYSTEM_CONFIG = "system_config_snapshot"
+ARCHIVE_SECTION_VALIDATION_RULES = "validation_rules_snapshot"
+
+
+class ArchiveManifest(BaseModel):
+    format_version: str = ARCHIVE_FORMAT_VERSION
+    archive_id: str
+    batch_code: str
+    batch_id_original: Optional[int] = None
+    generated_at: datetime
+    generated_by_user_id: int
+    generated_by_username: str
+    source_api_version: str = "1.0.0"
+    sections: List[str] = []
+    total_bytes: int = 0
+    item_counts: Dict[str, int] = {}
+    notes: Optional[str] = None
+
+
+class ArchiveImportConflict(BaseModel):
+    conflict_type: str
+    severity: str = "error"
+    message: str
+    details: Optional[Dict[str, Any]] = None
+
+
+class ArchivePrecheckResponse(BaseModel):
+    success: bool
+    archive_id: Optional[str] = None
+    batch_code: Optional[str] = None
+    can_restore: bool
+    require_overwrite: bool = False
+    overwrite_enabled: bool = False
+    conflicts: List[ArchiveImportConflict] = []
+    warnings: List[str] = []
+    info: Dict[str, Any] = {}
+    message: str
+
+
+class ArchiveRestoreResponse(BaseModel):
+    success: bool
+    archive_id: Optional[str] = None
+    new_batch_id: Optional[int] = None
+    batch_code: Optional[str] = None
+    overwritten: bool = False
+    restored_sections: List[str] = []
+    restored_counts: Dict[str, int] = {}
+    warnings: List[str] = []
+    message: str
+
+
+class SystemConfigResponse(BaseModel):
+    id: int
+    config_key: str
+    config_value: str
+    value_type: str
+    description: Optional[str] = None
+    updated_by: Optional[int] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class SystemConfigUpdateRequest(BaseModel):
+    config_value: str
+    value_type: Optional[str] = None
